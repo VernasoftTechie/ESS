@@ -174,13 +174,13 @@ msg_params              STRING      100      Parameter names (comma-separated)
 ```
 Field Name              Type        Length   Description
 ─────────────────────────────────────────────────────
-level                   INT4        —        Approval level (1, 2, 3, ...)
+appr_level                   INT4        —        Approval level (1, 2, 3, ...)
 attempt                 INT4        —        Attempt number
 approver_pernr          NUMC        8        Approver personnel number
 approver_name           STRING      100      Approver name
 status                  CHAR        1        Domain: ZHR_ESS_APPR_STATUS
 decided_on              DATS        —        Decision date
-comment                 STRING      500      Approver comment
+appr_comment                 STRING      500      Approver comment
 ```
 
 ---
@@ -356,7 +356,7 @@ comment                 STRING      500      Approver comment
 |---|---|---|---|---|
 | **client_id** | CHAR | 3 | ✓ PK | FK to ZHR_ESS_CLIENT |
 | **request_id** | CHAR | 20 | ✓ PK | FK to ZHR_ESS_REQ_HEAD |
-| **level** | INT4 | | ✓ PK | Approval level (1, 2, 3, ...) |
+| **appr_level** | INT4 | | ✓ PK | Approval level (1, 2, 3, ...) |
 | **attempt** | INT4 | | ✓ PK | Attempt number (1, 2, ... increments on Return→Resubmit) |
 | approver_pernr | NUMC | 8 | | Approver personnel number |
 | approver_name | STRING | 100 | | Denormalized approver name |
@@ -365,12 +365,12 @@ comment                 STRING      500      Approver comment
 | decided_by_pernr | NUMC | 8 | | Person who took action (NULL if Pending) |
 | decided_on | DATS | | | Decision date |
 | decided_time | TIMS | | | Decision time |
-| comment | STRING | 500 | | Approver remark (reason for rejection, etc.) |
+| appr_comment | STRING | 500 | | Approver remark (reason for rejection, etc.) |
 | sla_due_date | DATS | | | Expected completion (submission + SLA days) |
 | sla_breached | CHAR | 1 | | Y/N flag (set by job if SLA exceeded) |
 
 **Indexes:**
-- PK: (client_id, request_id, level, attempt)
+- PK: (client_id, request_id, appr_level, attempt)
 - Idx_01: (client_id, approver_pernr, status) — approver worklist (future)
 - Idx_02: (client_id, request_id, status) — timeline view
 - Idx_03: (client_id, sla_due_date, sla_breached) — SLA tracking (future)
@@ -393,7 +393,7 @@ comment                 STRING      500      Approver comment
 |---|---|---|---|---|
 | **client_id** | CHAR | 3 | ✓ PK | FK to ZHR_ESS_CLIENT |
 | **loan_type** | CHAR | 10 | ✓ PK | FK to ZHR_ESS_SERVICE.service_code |
-| **level** | INT4 | | ✓ PK | Approval level (1, 2, 3, ...) |
+| **appr_level** | INT4 | | ✓ PK | Approval level (1, 2, 3, ...) |
 | relationship_id | CHAR | 10 | | Org relationship (A002, A006, HR, Finance, etc.) |
 | fallback_pernr | NUMC | 8 | | Mandatory: if relationship_id fails, use this |
 | amount_from | DEC | (15,2) | | Amount bracket from (0 for minimum) |
@@ -407,7 +407,7 @@ comment                 STRING      500      Approver comment
 | created_by | SYUNAME | 12 | | Audit: creator |
 
 **Indexes:**
-- PK: (client_id, loan_type, level)
+- PK: (client_id, loan_type, appr_level)
 - Idx_01: (client_id, loan_type, amount_from, amount_to, active, effective_from, effective_to) — chain resolution
 - Idx_02: (client_id, active, effective_from, effective_to)
 

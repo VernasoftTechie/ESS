@@ -303,7 +303,7 @@
 
 ### TABLE 6: ZHR_ESS_APPRSTEP
 **Purpose:** Approval Timeline (Read-Only Child)  
-**Key:** (client_id, request_id, level, attempt)  
+**Key:** (client_id, request_id, appr_level, attempt)  
 **Indexes:** 4
 
 **Creation Steps:**
@@ -317,7 +317,7 @@
 **Field Verification:**
 - [ ] client_id (CHAR 3, PK1)
 - [ ] request_id (CHAR 20, PK2)
-- [ ] level (INT4, PK3)
+- [ ] appr_level (INT4, PK3)
 - [ ] attempt (INT4, PK4)
 - [ ] approver_pernr (NUMC 8)
 - [ ] approver_name (STRING 100)
@@ -326,12 +326,12 @@
 - [ ] decided_by_pernr (NUMC 8)
 - [ ] decided_on (DATS)
 - [ ] decided_time (TIMS)
-- [ ] comment (STRING 500)
+- [ ] appr_comment (STRING 500)
 - [ ] sla_due_date (DATS)
 - [ ] sla_breached (CHAR 1)
 
 **Index Verification:**
-- [ ] PK: (client_id, request_id, level, attempt)
+- [ ] PK: (client_id, request_id, appr_level, attempt)
 - [ ] Idx_01: (client_id, approver_pernr, status)
 - [ ] Idx_02: (client_id, request_id, status)
 - [ ] Idx_03: (client_id, sla_due_date, sla_breached)
@@ -343,7 +343,7 @@
 
 ### TABLE 7: ZHR_ESS_WFCONFIG
 **Purpose:** Approval Matrix (Customizing)  
-**Key:** (client_id, loan_type, level)  
+**Key:** (client_id, loan_type, appr_level)  
 **Indexes:** 3
 
 **Creation Steps:**
@@ -358,7 +358,7 @@
 **Field Verification:**
 - [ ] client_id (CHAR 3, PK1)
 - [ ] loan_type (CHAR 10, PK2)
-- [ ] level (INT4, PK3)
+- [ ] appr_level (INT4, PK3)
 - [ ] relationship_id (CHAR 10)
 - [ ] fallback_pernr (NUMC 8)
 - [ ] amount_from (DEC 15,2)
@@ -372,7 +372,7 @@
 - [ ] created_by (SYUNAME 12)
 
 **Index Verification:**
-- [ ] PK: (client_id, loan_type, level)
+- [ ] PK: (client_id, loan_type, appr_level)
 - [ ] Idx_01: (client_id, loan_type, amount_from, amount_to, active, effective_from, effective_to)
 - [ ] Idx_02: (client_id, active, effective_from, effective_to)
 

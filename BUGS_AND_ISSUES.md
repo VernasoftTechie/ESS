@@ -294,6 +294,75 @@ from the start (domains/data elements/classes get up to 30).
 
 ---
 
+## Issue #004: Reserved-Word Field Names (`LEVEL`, `COMMENT`)
+
+- **Date Found:** 2026-08-31
+- **Component:** DDIC (`ZHR_ESS_APPRSTEP`, `ZHR_ESS_WFCONFIG`)
+- **Severity:** Critical (blocked activation of 2 tables)
+- **Status:** Resolved
+
+### Description
+After fixing Issue #003, re-pulling and activating produced two new
+errors:
+```
+LEVEL is a reserved word (choose another field name)
+COMMENT is a reserved word (choose another field name)
+Table ZHR_ESS_APPRSTEP could not be activated
+Table ZHR_ESS_WFCONFIG could not be activated
+```
+
+### Root Cause
+`LEVEL` and `COMMENT`, used as bare field names, collide with ABAP/SQL
+reserved keywords. `ZHR_ESS_APPRSTEP` had both (`LEVEL` as a key field,
+`COMMENT` as a text field); `ZHR_ESS_WFCONFIG` had `LEVEL` only (also a
+key field). This is an **exact-name** collision, not a substring one —
+compound names sharing the same root, like `CURRENT_LEVEL`,
+`PARALLEL_LEVEL`, `ITEM_TYPE`, `FIELD_VALUE`, `OLD_VALUE`, and the bare
+words `STATUS` and `SEQUENCE` used elsewhere in the same tables, all
+activated without complaint. Only the two exact matches were rejected.
+
+### Resolution
+Renamed both fields, in both tables (and in every table's own PK where
+`LEVEL` was a key component):
+- `LEVEL` → **`APPR_LEVEL`**
+- `COMMENT` → **`APPR_COMMENT`**
+
+Regenerated `zhr_ess_apprstep.tabl.xml` and `zhr_ess_wfconfig.tabl.xml`,
+and updated every documentation reference to these two tables' field
+lists and primary-key tuples (`DDIC/01_DDIC_COMPLETE_SPECIFICATION.md`,
+`DDIC/02_SE11_CREATION_GUIDE.md`, `DDIC/DDIC_CREATION_CHECKLIST.md`,
+`GITHUB_README.md`) to match — narrowly, line-by-line, since "level"
+and "comment" also appear frequently in unrelated prose (e.g.
+"3-level chain", "approval level") that must not be touched.
+
+Proactively audited every other field name across all 13 tables for
+bare (non-compound) reserved-word risk before regenerating — none
+found; every other occurrence of a risky word is a compound name
+(`ITEM_TYPE`, `LOAN_TYPE`, `FIELD_VALUE`, etc.), which is safe.
+
+### Test Case / Reproduction
+1. Pull the repo in ABAPGit, Activate.
+2. Expect all 5 domains, 5 data elements, and 13 tables to activate
+   cleanly. If a table fails with "`<WORD>` is a reserved word", the
+   fastest fix is renaming just that field (prefix with something
+   table-specific, e.g. `APPR_`) rather than guessing a wholesale
+   rename — the error names the exact field.
+
+### Related Code
+- [`src/zhr_ess_apprstep.tabl.xml`](../src/zhr_ess_apprstep.tabl.xml)
+- [`src/zhr_ess_wfconfig.tabl.xml`](../src/zhr_ess_wfconfig.tabl.xml)
+
+### Lesson Learned
+Reserved-word collisions in ABAP DDIC are field-name-exact, not
+prefix/suffix-aware — a field named `LEVEL` fails where `CURRENT_LEVEL`
+succeeds. When choosing field names during initial design, avoid bare
+common English nouns that double as SQL/ABAP keywords (`LEVEL`,
+`COMMENT`, `TYPE`, `VALUE`, `KEY`, `TIME`, `DATE`, `NAME`, `CLASS`,
+`TABLE`) — qualify them (`APPR_LEVEL`, `APPR_COMMENT`) from the start
+rather than discovering the collision at activation time.
+
+---
+
 ## Known Issues & Resolutions (Phase 1)
 
 ### 1. Email Source Fallback

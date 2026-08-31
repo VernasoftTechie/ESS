@@ -131,12 +131,12 @@ ESS/
 | ZHR_ESS_REQ_HEAD | Request header (root) | 23 | (client_id, request_id) |
 | ZHR_ESS_REQ_ITEM | Request items | 8 | (client_id, request_id, item_seq) |
 | ZHR_ESS_LOANDTL | Loan details (1:1 child) | 10 | (client_id, request_id) |
-| ZHR_ESS_APPRSTEP | Approval timeline | 14 | (client_id, request_id, level, attempt) |
+| ZHR_ESS_APPRSTEP | Approval timeline | 14 | (client_id, request_id, appr_level, attempt) |
 
 ### Configuration (5 tables)
 | Table | Purpose | Fields | Key |
 |---|---|---|---|
-| ZHR_ESS_WFCONFIG | Approval matrix | 14 | (client_id, loan_type, level) |
+| ZHR_ESS_WFCONFIG | Approval matrix | 14 | (client_id, loan_type, appr_level) |
 | ZHR_ESS_LOANPRM | Eligibility rules | 13 | (client_id, loan_type) |
 | ZHR_ESS_INT_RATE | Interest rates | 5 | (client_id, loan_type, eff_date) |
 | ZHR_ESS_CUSTFLD | Custom fields config | 12 | (client_id, loan_type, field_key) |

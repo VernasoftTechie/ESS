@@ -379,7 +379,7 @@ Pos  Field Name              Type       Length   Key  Domain
 ───────────────────────────────────────────────────────────
 1    client_id               CHAR       3        ✓    
 2    request_id              CHAR       20       ✓    
-3    level                   INT4                 ✓    
+3    appr_level                   INT4                 ✓    
 4    attempt                 INT4                 ✓    
 5    approver_pernr          NUMC       8            
 6    approver_name           STRING     100         
@@ -388,13 +388,13 @@ Pos  Field Name              Type       Length   Key  Domain
 9    decided_by_pernr        NUMC       8           
 10   decided_on              DATS                   
 11   decided_time            TIMS                   
-12   comment                 STRING     500         
+12   appr_comment                 STRING     500         
 13   sla_due_date            DATS                   
 14   sla_breached            CHAR       1           
 ```
 
 **Indexes Tab:**
-- Primary Key: (client_id, request_id, level, attempt)
+- Primary Key: (client_id, request_id, appr_level, attempt)
 - Secondary Indexes:
   - Idx_01: (client_id, approver_pernr, status)
   - Idx_02: (client_id, request_id, status)
@@ -423,7 +423,7 @@ Pos  Field Name          Type       Length   Key
 ────────────────────────────────────────────────
 1    client_id           CHAR       3        ✓    
 2    loan_type           CHAR       10       ✓    
-3    level               INT4                 ✓    
+3    appr_level               INT4                 ✓    
 4    relationship_id     CHAR       10          
 5    fallback_pernr      NUMC       8           
 6    amount_from         DEC        (15,2)      
@@ -438,7 +438,7 @@ Pos  Field Name          Type       Length   Key
 ```
 
 **Indexes Tab:**
-- Primary Key: (client_id, loan_type, level)
+- Primary Key: (client_id, loan_type, appr_level)
 - Secondary Indexes:
   - Idx_01: (client_id, loan_type, amount_from, amount_to, active, effective_from, effective_to)
   - Idx_02: (client_id, active, effective_from, effective_to)
