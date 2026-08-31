@@ -363,6 +363,116 @@ rather than discovering the collision at activation time.
 
 ---
 
+## Issue #005: Service Layer (Interfaces + Classes) — Correction & Verification Status
+
+- **Date Found:** 2026-08-31
+- **Component:** Service Layer (`ZIF_ESS_*`, `ZCL_ESS_*`)
+- **Severity:** Medium (one factual correction; rest is a transparency note)
+- **Status:** Documented — **not yet activated against a real system**
+
+### Part A — Correction: email source is IT0105, not IT0006
+
+The originally uploaded architecture document (`FINAL_CONCLUSIONS.md`,
+section 1, and `DDIC_Tables_Final_Spec.md` header) both state:
+
+> Try to read IT0006 (Email, Phone master data). If not found → fallback
+> to PA0006.
+
+This is **factually incorrect** about standard SAP HR: infotype **0006**
+is "Addresses" — it has no standard email field. Infotype **0105**
+("Communication") is the standard SAP infotype for email, mobile,
+system-user-ID, etc. `PA0006` and `IT0006` also refer to the exact same
+underlying table (infotype 0006's physical table is literally named
+`PA0006`) — so the original "try IT0006, fall back to PA0006" reads as
+if it names two different sources when phrased that way, which added
+to the confusion.
+
+**What `ZCL_ESS_EMPLOYEE_PROVIDER_HCM.get_employee_contact_info()`
+actually implements**, correcting for this:
+- **Email — primary:** `PA0105`, subtype configured for e-mail
+  (`gc_subty_email`, defaulted to `'0010'` — adjust to your system's
+  T591A configuration).
+- **Phone — primary:** `PA0105`, subtype configured for phone
+  (`gc_subty_phone`, defaulted to `'0020'`).
+- **Phone — fallback:** `PA0006-TELNR`, which *is* a genuine standard
+  field on the Addresses infotype (unlike email).
+- **Email — fallback:** left as a documented no-op; standard `PA0006`
+  has no email field to fall back to. If your system extended `PA0006`
+  with a custom email field, add that read in the `ELSE` branch.
+
+The **dual-source-with-fallback pattern** — the actual architectural
+decision that mattered — is preserved exactly as designed; only the
+specific infotype/table names were corrected to match real SAP HR.
+
+**Action for you:** if your target system stores email somewhere else
+(a Z-infotype, IT0002 extension, etc.), tell me and I'll adjust
+`get_employee_contact_info()` accordingly — this was implemented
+against generic standard-SAP HR, not your specific system's config.
+
+### Part B — Proactive fix: two class names exceeded the 30-char limit
+
+Learned from Issue #003 (DDIC 16-char table name limit) that SAP
+enforces hard length caps per object type. Classes/interfaces allow up
+to **30 characters** (not 16), and two names from the original plan
+exceeded even that:
+
+| Old name (too long) | Chars | New name | Chars |
+|---|---|---|---|
+| `ZCL_ESS_LOAN_VALIDATOR_PERSONAL` | 31 | **`ZCL_ESS_PERSLOAN_VALIDATOR`** | 26 |
+| `ZCL_ESS_NOTIFICATION_HANDLER_SMTP` | 33 | **`ZCL_ESS_NOTIF_HANDLER_SMTP`** | 26 |
+
+Caught and fixed **before** writing any code this time, rather than
+after a failed activation — the DDIC round-trips paid for themselves.
+
+### Part C — Transparency: what's verified vs. not
+
+Unlike the 13 DDIC tables (each field-by-field verified against a real
+working ABAPGit repository before being written), the **method bodies**
+in these 7 classes are standard ABAP written from HR/ABAP knowledge,
+not cross-checked against a matching real example — the reference
+repo's only class file is an empty RAP-behavior stub with no method
+logic to compare against. The *wrapper XML* format (`.clas.xml`,
+`.intf.xml`) **is** the verified-working minimal pattern from that
+repo. Specific risk areas to watch on first Pull + Activate:
+- `ZCL_ESS_EMPLOYEE_PROVIDER_HCM.is_suspended()` reads table `PA0101`
+  ("Disciplinary") **dynamically** (by name, not hard-coded in the
+  `FROM` clause) specifically because that infotype is not universal
+  standard SAP — if it doesn't exist on your system, this fails safe
+  (returns "not suspended") at runtime instead of blocking the whole
+  class's activation. If you *do* have `PA0101`, double-check the field
+  semantics match "suspended."
+- `is_on_probation()` assumes the probation end date lives in infotype
+  0041's `DAT01` slot — adjust if your T548Y config uses a different
+  slot.
+- `ZCL_ESS_WORKFLOW_ENGINE.get_approver_by_relationship()` only
+  resolves relationship `A002` via a simplified single-hop Person→
+  Person `HRP1001` read — real org models more often route
+  Person→Position→Position→Person. Every other relationship ID
+  (`A006`, `HR`, `Finance`, custom codes) currently falls straight
+  through to `fallback_pernr`, which is exactly why that field is
+  mandatory in `ZHR_ESS_WFCONFIG`. Extend as more relationships are
+  needed.
+
+### Test Case / Reproduction
+1. Pull the repo in ABAPGit, Activate.
+2. Interfaces (pure signatures, no logic) should activate cleanly —
+   same low risk as DDIC domains.
+3. Classes may need one iteration for something environment-specific
+   (an infotype absent on your system, a field-name mismatch on a
+   non-standard table) — paste whatever the activation log shows and
+   it'll be fixed the same way as Issues #001-#004.
+
+### Lesson Learned
+For DDIC objects, the risk was an *undocumented internal format* (only
+fixable by matching a verified working example). For class/interface
+*logic*, the risk shifts to *domain-knowledge correctness* (right
+infotype, right field, right subtype) — a different kind of thing to
+verify, and one where cross-checking the user's own source documents
+against actual standard-SAP behavior (as done here for IT0006 vs 0105)
+matters as much as cross-checking a reference repo.
+
+---
+
 ## Known Issues & Resolutions (Phase 1)
 
 ### 1. Email Source Fallback
