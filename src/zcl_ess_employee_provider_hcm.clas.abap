@@ -12,8 +12,7 @@ CLASS zcl_ess_employee_provider_hcm DEFINITION
     CONSTANTS:
       gc_subty_basic_salary TYPE subty VALUE '1000',
       gc_subty_email        TYPE subty VALUE '0010',
-      gc_subty_phone        TYPE subty VALUE '0020',
-      gc_it0101_tabname     TYPE tabname VALUE 'PA0101'.
+      gc_subty_phone        TYPE subty VALUE '0020'.
 
     METHODS read_pa0000
       IMPORTING
@@ -312,28 +311,24 @@ CLASS zcl_ess_employee_provider_hcm IMPLEMENTATION.
 * Infotype 0101 ("Disciplinary") is referenced in the original
 * architecture notes as this system's suspension source, but it is not
 * a universal standard SAP infotype - its presence/structure is
-* system-specific. Read via dynamic FROM so a system where PA0101
-* doesn't exist fails safe (not suspended) at runtime instead of
-* blocking activation of this entire class at compile time. If your
-* system has PA0101, this returns TRUE when an active record exists
-* at the key date - narrow the WHERE clause with a SUBTY filter if
-* suspension needs to be distinguished from other record types there.
+* system-specific. If table PA0101 does not exist on your system,
+* this method will fail ACTIVATION with a clear "table not found"
+* error rather than at runtime - see BUGS_AND_ISSUES.md Issue #007 if
+* you hit that; the fix is either creating/aliasing PA0101, or telling
+* me what your system's actual suspension source is so this method can
+* be pointed at it. If your system has PA0101, this returns TRUE when
+* an active record exists at the key date - narrow the WHERE clause
+* with a SUBTY filter if suspension needs to be distinguished from
+* other record types there.
     DATA lv_dummy TYPE pernr_d.
 
-    rv_yes = abap_false.
+    SELECT SINGLE pernr FROM pa0101
+      INTO @lv_dummy
+      WHERE pernr = @iv_pernr
+        AND begda <= @iv_key_date
+        AND endda >= @iv_key_date.
 
-    TRY.
-        SELECT SINGLE pernr FROM (gc_it0101_tabname)
-          INTO @lv_dummy
-          WHERE pernr = @iv_pernr
-            AND begda <= @iv_key_date
-            AND endda >= @iv_key_date.
-        IF sy-subrc = 0.
-          rv_yes = abap_true.
-        ENDIF.
-      CATCH cx_sy_dynamic_osql_semantics cx_sy_dynamic_osql_syntax.
-        rv_yes = abap_false.
-    ENDTRY.
+    rv_yes = COND #( WHEN sy-subrc = 0 THEN abap_true ELSE abap_false ).
 
   ENDMETHOD.
 

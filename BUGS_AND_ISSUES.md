@@ -579,6 +579,83 @@ template.
 
 ---
 
+## Issue #007: "CLAS, error while scanning source. Subrc = 0" (ZCL_ESS_EMPLOYEE_PROVIDER_HCM only)
+
+- **Date Found:** 2026-08-31
+- **Component:** `ZCL_ESS_EMPLOYEE_PROVIDER_HCM`
+- **Severity:** Medium (blocked 1 of 13 objects; the other 12 imported successfully after Issue #006's fix)
+- **Status:** Best-effort mitigation applied, **root cause not confirmed**
+
+### Description
+After fixing Issue #006, re-pulling imported all 6 interfaces and 6 of
+7 classes successfully. One class failed differently from anything
+seen so far:
+```
+CLAS, error while scanning source. Subrc = 0
+Import of object ZCL_ESS_EMPLOYEE_PROVIDER_HCM failed
+```
+Unlike Issues #001-#006, this is not a naming, length, or metadata
+problem — the error is about abapGit's own *parsing* of the source text
+into class-pool structure, not a DDIC/catalog validation.
+
+### Root Cause — Honest Assessment
+**Not confirmed.** `ZCL_ESS_EMPLOYEE_PROVIDER_HCM` was the only one of
+7 classes using `TRY. ... CATCH cx_sy_dynamic_osql_semantics
+cx_sy_dynamic_osql_syntax. ... ENDTRY.` around a **dynamic** `SELECT
+... FROM (variable)`. That is the single most unusual ABAP construct
+in the entire Service Layer — every other class uses only plain,
+static `SELECT ... FROM <table>`. No encoding issue was found (file is
+plain ASCII, structurally balanced METHOD/ENDMETHOD pairs, same as the
+working classes) — the leading hypothesis is that this TRY/CATCH +
+dynamic-FROM combination is what abapGit's source scanner tripped on,
+but this has **not been proven** by isolating and testing it alone.
+
+### Mitigation Applied
+Removed the `TRY/CATCH` and dynamic `SELECT ... FROM (gc_it0101_tabname)`
+entirely from `is_suspended()`, replacing it with a plain static
+`SELECT SINGLE pernr FROM pa0101 ...`. This trades away the "fails
+safe (not suspended) if PA0101 doesn't exist on your system" behavior
+— **if table `PA0101` doesn't exist in your system, this method will
+now fail class ACTIVATION with a clear, ordinary "table/view PA0101
+not defined in the ABAP Dictionary" error**, rather than the opaque
+scanning error, and rather than silently defaulting to "not suspended"
+at runtime. That trade-off is intentional: a normal, diagnosable
+compile error is strictly easier to act on than either the vague
+scanning error we just hit or a silent runtime fallback that could
+mask a real config problem.
+
+### If This Doesn't Fix It
+If `ZCL_ESS_EMPLOYEE_PROVIDER_HCM` still fails to import after this
+change, the TRY/CATCH hypothesis is wrong and something else in this
+specific file is the cause — at that point the next diagnostic step is
+comparing this file line-by-line against a class that DID import
+successfully (e.g. `ZCL_ESS_WORKFLOW_ENGINE`), since it's the only
+concrete signal available (no other class shares the failure).
+
+### Test Case / Reproduction
+1. Pull the repo in ABAPGit, Import.
+2. If `ZCL_ESS_EMPLOYEE_PROVIDER_HCM` now imports successfully: root
+   cause was very likely the TRY/CATCH + dynamic SQL, confirmed
+   retroactively (update this entry's Status to "Resolved, confirmed"
+   if so).
+3. If PA0101 doesn't exist on your system, expect an activation error
+   naming that table specifically — report it and I'll either point
+   `is_suspended()` at your system's actual suspension source, or
+   reintroduce a safer non-TRY/CATCH way to make the read optional
+   (e.g. a config flag in `ZHR_ESS_CLIENT` gating whether the
+   suspension check runs at all, decided together rather than guessed).
+
+### Lesson Learned
+Not every abapGit import failure is a naming/metadata problem like
+Issues #001-#006 — this one is a different failure *class* entirely
+(source-level parsing, not catalog registration), and for this kind,
+the fastest path when there's exactly one differing file among several
+working ones is to look at what's *structurally unique* in that file
+and simplify it out first, rather than guessing at XML-level causes
+again.
+
+---
+
 ## Known Issues & Resolutions (Phase 1)
 
 ### 1. Email Source Fallback
