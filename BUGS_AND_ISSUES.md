@@ -473,6 +473,112 @@ matters as much as cross-checking a reference repo.
 
 ---
 
+## Issue #006: Interface/Class Import Failed — "Invalid parameter OBJECT/OBJECTCLASS"
+
+- **Date Found:** 2026-08-31
+- **Component:** Service Layer (all 6 `.intf.xml`, all 7 `.clas.xml`)
+- **Severity:** Critical (blocked import of all 13 objects)
+- **Status:** Fixed, **not yet re-verified** by a real Pull (see below)
+
+### Description
+First Pull + Import of the Service Layer failed completely:
+```
+Invalid parameter OBJECT/OBJECTCLASS
+Import of object ZIF_ESS_EMPLOYEE_PROVIDER failed
+... (repeated for all 6 interfaces)
+Invalid parameter OBJECT/OBJECTCLASS
+Import of object ZCL_ESS_EMPLOYEE_PROVIDER_HCM failed
+... (repeated for all 7 classes)
+```
+followed by, on retry:
+```
+Error reading report ZIF_ESS_EMPLOYEE_PROVIDER=====IU
+Import of object ZIF_ESS_EMPLOYEE_PROVIDER failed
+Error reading report ZCL_ESS_EMPLOYEE_PROVIDER_HCM=====CU
+Import of object ZCL_ESS_EMPLOYEE_PROVIDER_HCM failed
+... (same pattern for every interface/class)
+```
+
+### Root Cause
+The `.intf.xml` / `.clas.xml` wrapper files were copied from the
+**one** class example in the reference repo
+(`VernasoftTechie/RAP_Migration_Tool`), which was a near-empty XML —
+just `<asx:abap version="1.0" .../>` with no metadata block at all.
+That example activated fine, but per that repo's own README, it was
+captured by **serializing an already-existing class** (created by hand
+in ADT, then synced via abapGit) — not verified for **creating a new
+class from scratch** via Pull, which is what this repo needs. A
+from-scratch class/interface import needs the object's catalog
+metadata (`VSEOCLASS` for classes, `VSEOINTERF` for interfaces —
+name, description, exposure, state) so SAP can register the object at
+all before writing its source code into the class-pool includes.
+Without it, the low-level creation call fails validating a blank/
+missing object type, which is what "Invalid parameter
+OBJECT/OBJECTCLASS" and the subsequent "Error reading report
+`<name>`=====IU/CU" (abapGit falling back to reading a class-pool
+include that was never created) both point to.
+
+### Resolution
+Added the metadata block to every `.intf.xml` and `.clas.xml`:
+```xml
+<!-- Interface -->
+<VSEOINTERF>
+  <CLSNAME>ZIF_...</CLSNAME>
+  <LANGU>E</LANGU>
+  <DESCRIPT>...</DESCRIPT>
+  <EXPOSURE>2</EXPOSURE>
+  <STATE>1</STATE>
+  <UNICODE>X</UNICODE>
+</VSEOINTERF>
+
+<!-- Class -->
+<VSEOCLASS>
+  <CLSNAME>ZCL_...</CLSNAME>
+  <LANGU>E</LANGU>
+  <DESCRIPT>...</DESCRIPT>
+  <STATE>1</STATE>
+  <FIXPT>X</FIXPT>
+  <UNICODE>X</UNICODE>
+  <EXPOSURE>2</EXPOSURE>
+</VSEOCLASS>
+```
+`EXPOSURE = 2` (public), `STATE = 1` (implemented, not just declared),
+`FIXPT = X` (fixed-point arithmetic — needed since several methods do
+decimal math, e.g. EMI calculation). Every object now also has a real
+description instead of none.
+
+### ⚠️ Verification Status (be aware before pulling again)
+Unlike the DDIC fixes (#001–#004), **this fix is not cross-checked
+against a matching real working example** — no `VSEOCLASS`/
+`VSEOINTERF`-bearing `.clas.xml`/`.intf.xml` exists in the one
+reference repo available this session. This shape is written from
+well-established, standard SAP OO Repository catalog knowledge
+(`SEOCLASS`/`SEOCLASST` structure, stable since ABAP OO's introduction)
+rather than a diffed example. It is the best next attempt, not a
+guaranteed fix — if it still fails, the exact error text will narrow
+down which field is missing or wrong, the same way Issues #001–#004
+got resolved.
+
+### Test Case / Reproduction
+1. Pull the repo in ABAPGit, Import.
+2. Expect all 6 interfaces and 7 classes to import successfully this
+   time. If "Invalid parameter OBJECT/OBJECTCLASS" or a similar
+   metadata error recurs, paste the log — one of the `VSEOCLASS`/
+   `VSEOINTERF` field values is likely still off, not the source code.
+
+### Lesson Learned
+A serialized example captured from an **already-existing** object is
+not automatically proof that the same (possibly minimal/degenerate)
+shape works for **creating** that kind of object from nothing — export
+and import are two different code paths in abapGit, and a "successful
+real repo" only proves the export side unless you know the object was
+actually created via that exact Pull flow. Ask (or check the source
+repo's own commit history / README) whether an object was pulled-in
+or hand-created-then-synced before trusting its shape as a from-scratch
+template.
+
+---
+
 ## Known Issues & Resolutions (Phase 1)
 
 ### 1. Email Source Fallback
