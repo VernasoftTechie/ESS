@@ -192,7 +192,7 @@ Row 2 (CONVLOAN - Future):
 Row 1 (Level 1 - Amount: 0 to 500K):
   client_id:          100
   loan_type:          PERSLOAN
-  level:              1
+  appr_level:         1
   relationship_id:    A002            (Reports-to)
   fallback_pernr:     00000001        (default manager)
   amount_from:        0.00
@@ -208,7 +208,7 @@ Row 1 (Level 1 - Amount: 0 to 500K):
 Row 2 (Level 2 - Amount: 500K to 2M):
   client_id:          100
   loan_type:          PERSLOAN
-  level:              2
+  appr_level:         2
   relationship_id:    A006            (Cost Center Manager)
   fallback_pernr:     00000002        (cost center mgr fallback)
   amount_from:        500000.00
@@ -224,7 +224,7 @@ Row 2 (Level 2 - Amount: 500K to 2M):
 Row 3 (Level 3 - Amount: 2M to unlimited):
   client_id:          100
   loan_type:          PERSLOAN
-  level:              3
+  appr_level:         3
   relationship_id:    HR              (HR Department)
   fallback_pernr:     00000003        (HR head/CFO)
   amount_from:        2000000.00
@@ -240,7 +240,7 @@ Row 3 (Level 3 - Amount: 2M to unlimited):
 Row 4 (Level 1 - CONVLOAN - Future):
   client_id:          100
   loan_type:          CONVLOAN
-  level:              1
+  appr_level:         1
   relationship_id:    A002
   fallback_pernr:     00000001
   amount_from:        0.00
@@ -452,7 +452,7 @@ SELECT * FROM ZHR_ESS_SERVICE WHERE client_id = '100' AND active = 'Y'
 -- Check approval chain
 SELECT * FROM ZHR_ESS_WFCONFIG 
   WHERE client_id = '100' AND loan_type = 'PERSLOAN' 
-  ORDER BY level, amount_from
+  ORDER BY appr_level, amount_from
 
 -- Check interest rates
 SELECT * FROM ZHR_ESS_INT_RATE 
