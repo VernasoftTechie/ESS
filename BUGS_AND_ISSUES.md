@@ -177,6 +177,123 @@ table — better to ship without it and add it by hand in SE11 once.
 
 ---
 
+## Issue #003: Three Real Activation Errors on First Pull (with fixes)
+
+- **Date Found:** 2026-08-31
+- **Component:** DDIC (domains, data elements, tables)
+- **Severity:** Critical (8 of 13 tables failed to import; 2 data elements failed to activate)
+- **Status:** Resolved
+
+### Description
+First actual ABAPGit "Pull" + activation against a real SAP system
+surfaced three distinct, unrelated errors:
+
+**(a) 8 of 13 tables failed with "Select a shorter name for
+`<TABNAME>`" / "Import of object `<TABNAME>` failed":**
+```
+ZHR_ESS_APPR_STEP, ZHR_ESS_CHANGE_LOG, ZHR_ESS_CUST_FIELD,
+ZHR_ESS_LOAN_PARAM, ZHR_ESS_LOAN_PERSONAL,
+ZHR_ESS_LOAN_PERSONAL_CUSTOM, ZHR_ESS_VALIDATION_MSG, ZHR_ESS_WF_CONFIG
+```
+
+**(b) Two data elements failed to activate:**
+```
+Data Element ZHR_ESS_FIELD_TYPE could not be activated
+Data Element ZHR_ESS_MSG_TYPE could not be activated
+```
+alongside warnings: `Output length (10) is greater than the calculated
+output length (1)`, `Output length (15)...`, `Output length (5)...`, and
+`Medium key word in language EN: length 17 > maximum length 15`,
+`Long key word in language EN: length 23 > maximum length 20`.
+
+### Root Cause
+**(a) Table name length.** Classic ABAP Dictionary transparent tables
+are capped at **16 characters** for the physical table name. Every
+table that failed was 17–28 characters long; every table ≤16 characters
+(`ZHR_ESS_CLIENT`, `ZHR_ESS_SERVICE`, `ZHR_ESS_REQ_HEAD`,
+`ZHR_ESS_REQ_ITEM`, `ZHR_ESS_INT_RATE`) activated without issue. This
+16-char limit does **not** apply to domains or data elements (up to 30
+chars), which is why none of those failed for this reason.
+
+**(b) Domain `OUTPUTLEN` too large.** All 5 domains are `CHAR(1)` with
+no conversion exit. For a plain character field like that, the DDIC
+will not allow a declared display `OUTPUTLEN` greater than the field's
+own `LENG` (1) — there's nothing to pad or convert into a wider display.
+The domains had been given arbitrary `OUTPUTLEN` values (5/10/15) for
+nicer-looking list columns, which is invalid without a conversion
+routine. The data elements built on top of the two most visibly-affected
+domains (`ZHR_ESS_FIELD_TYPE`, `ZHR_ESS_MSG_TYPE`) failed to activate as
+a downstream consequence.
+
+**(c) Data element label text longer than its declared display width.**
+Independently of (b), two data elements had `SCRTEXT_M` (medium column
+header) or `SCRTEXT_L` (long column header) text longer than the
+`SCRLEN2`/`SCRLEN3` width declared for it:
+- `ZHR_ESS_FIELD_TYPE`: medium text `"Custom field type"` = 17 chars,
+  but `SCRLEN2` was only 15.
+- `ZHR_ESS_MSG_TYPE`: long text `"Validation message type"` = 23 chars,
+  but `SCRLEN3` was only 20.
+
+### Resolution
+**(a) Renamed all 8 over-length tables** to ≤16 characters:
+
+| Old name (too long) | New name | Chars |
+|---|---|---|
+| `ZHR_ESS_APPR_STEP` (17) | **`ZHR_ESS_APPRSTEP`** | 16 |
+| `ZHR_ESS_CHANGE_LOG` (18) | **`ZHR_ESS_CHGLOG`** | 14 |
+| `ZHR_ESS_CUST_FIELD` (18) | **`ZHR_ESS_CUSTFLD`** | 15 |
+| `ZHR_ESS_LOAN_PARAM` (18) | **`ZHR_ESS_LOANPRM`** | 15 |
+| `ZHR_ESS_LOAN_PERSONAL` (21) | **`ZHR_ESS_LOANDTL`** | 15 |
+| `ZHR_ESS_LOAN_PERSONAL_CUSTOM` (28) | **`ZHR_ESS_CUSTVAL`** | 15 |
+| `ZHR_ESS_VALIDATION_MSG` (22) | **`ZHR_ESS_VALMSG`** | 14 |
+| `ZHR_ESS_WF_CONFIG` (17) | **`ZHR_ESS_WFCONFIG`** | 16 |
+
+Domain and data element names (`ZHR_ESS_REQ_STATUS`,
+`ZHR_ESS_APPR_STATUS`, `ZHR_ESS_FIELD_TYPE`, `ZHR_ESS_MSG_TYPE`,
+`ZHR_ESS_LOAN_PURPOSE`) were **not** renamed — they're under the 30-char
+limit that applies to those object types and were not part of the error.
+
+**(b)** Set every domain's `OUTPUTLEN` to `000001` (equal to `LENG`),
+matching what a plain CHAR(1)-without-conversion-exit field is actually
+allowed to declare.
+
+**(c)** Widened every data element's label fields uniformly:
+`SCRLEN1=10, SCRLEN2=20, SCRLEN3=40, HEADLEN=40` — comfortably fits the
+longest text used across all 5 (23 characters) with margin for future
+label edits, instead of hand-tuning two individually.
+
+All 13 `.tabl.xml`, 5 `.doma.xml`, and 5 `.dtel.xml` files were
+regenerated from the corrected generator script and re-pushed.
+
+### Test Case / Reproduction
+1. Pull the repo in ABAPGit into package `ZHR_ESS_V1`.
+2. Activate. Expect: all 5 domains, 5 data elements, and 13 tables
+   activate with **no errors** (warnings about buffering/index absence,
+   per Issue #002, are expected and fine).
+3. If a table still fails with "Select a shorter name", check its
+   `TABNAME` length in the corresponding `.tabl.xml` — must be ≤16.
+
+### Related Code
+- All files under [`src/*.tabl.xml`](../src/) (8 renamed)
+- All files under [`src/*.doma.xml`](../src/) (`OUTPUTLEN` fix)
+- All files under [`src/*.dtel.xml`](../src/) (`SCRLEN`/`HEADLEN` fix)
+- `DDIC/01_DDIC_COMPLETE_SPECIFICATION.md` and
+  `DDIC/DDIC_CREATION_CHECKLIST.md` — table names updated to match
+
+### Lesson Learned
+Two of these three errors (name length, output length) are **not**
+guessable from documentation alone — they only surface at real
+activation time against a real SAP system, because they depend on
+DDIC-internal validation rules (16-char physical table name cap,
+output-length-vs-conversion-exit check) that aren't obvious from the
+XML schema itself. Treat every first real `Pull` + activate as a
+verification step, not a formality — expect to iterate once against
+real error output before a from-scratch DDIC generation is trustworthy.
+Naming: keep future custom table names to **16 characters or fewer**
+from the start (domains/data elements/classes get up to 30).
+
+---
+
 ## Known Issues & Resolutions (Phase 1)
 
 ### 1. Email Source Fallback

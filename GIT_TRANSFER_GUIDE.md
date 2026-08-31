@@ -132,7 +132,7 @@ git push -u origin main
 
 2. **Create 13 Tables** (2-3 hours)
    - Follow: `DDIC/02_SE11_CREATION_GUIDE.md`
-   - Tables: ZHR_ESS_CLIENT through ZHR_ESS_CHANGE_LOG
+   - Tables: ZHR_ESS_CLIENT through ZHR_ESS_CHGLOG
    - Assign to package: `ZHR_ESS_V1`
 
 3. **Verify in SE11**

@@ -71,21 +71,21 @@ Core Tables:
   2. ZESS_SERVICE (loan type catalog)
   3. ZESS_REQ_HEAD (request header)
   4. ZESS_REQ_ITEM (request items)
-  5. ZESS_LOAN_PERSONAL (loan details)
-  6. ZESS_APPR_STEP (approval timeline)
+  5. ZHR_ESS_LOANDTL (loan details)
+  6. ZHR_ESS_APPRSTEP (approval timeline)
 
 Configuration Tables:
-  7. ZESS_WF_CONFIG (approval matrix)
-  8. ZESS_LOAN_PARAM (eligibility config)
+  7. ZHR_ESS_WFCONFIG (approval matrix)
+  8. ZHR_ESS_LOANPRM (eligibility config)
   9. ZESS_INT_RATE (interest rates)
 
 Customization Tables:
- 10. ZESS_CUST_FIELD (custom fields config)
- 11. ZESS_LOAN_PERSONAL_CUSTOM (custom field values)
- 12. ZESS_VALIDATION_MSG (validation messages)
+ 10. ZHR_ESS_CUSTFLD (custom fields config)
+ 11. ZHR_ESS_CUSTVAL (custom field values)
+ 12. ZHR_ESS_VALMSG (validation messages)
 
 Audit:
- 13. ZESS_CHANGE_LOG (audit trail)
+ 13. ZHR_ESS_CHGLOG (audit trail)
 ```
 
 **Checks:**
@@ -108,10 +108,10 @@ Audit:
 **Deliverables:**
 - ZESS_CLIENT: 1 test client (client_id='100')
 - ZESS_SERVICE: 1 loan type (PERSLOAN)
-- ZESS_LOAN_PARAM: Eligibility rules for PERSLOAN
+- ZHR_ESS_LOANPRM: Eligibility rules for PERSLOAN
 - ZESS_INT_RATE: Sample rate (8.5%)
-- ZESS_WF_CONFIG: 3-level approval chain
-- ZESS_VALIDATION_MSG: All validation message IDs
+- ZHR_ESS_WFCONFIG: 3-level approval chain
+- ZHR_ESS_VALMSG: All validation message IDs
 
 **Checks:**
 - [ ] Master data loaded (via SE16 or program)
@@ -165,7 +165,7 @@ Audit:
    - Dual-source email logic (IT0006 → PA0006)
    
 2. ZCL_ESS_VALIDATION_ENGINE
-   - Retrieve messages from ZESS_VALIDATION_MSG
+   - Retrieve messages from ZHR_ESS_VALMSG
    - Format with parameters
    - Classify as ERROR/WARNING/INFO
    
@@ -175,11 +175,11 @@ Audit:
    - Concurrent loan checks
    
 4. ZCL_ESS_METADATA_PROVIDER
-   - Read ZESS_LOAN_PARAM, ZESS_INT_RATE, ZESS_CUST_FIELD, ZESS_VALIDATION_MSG
+   - Read ZHR_ESS_LOANPRM, ZESS_INT_RATE, ZHR_ESS_CUSTFLD, ZHR_ESS_VALMSG
    - Cache where appropriate
    
 5. ZCL_ESS_WORKFLOW_ENGINE
-   - Read ZESS_WF_CONFIG
+   - Read ZHR_ESS_WFCONFIG
    - Resolve approval chain per amount bracket
    - Get approver by relationship (A002, A006, etc.)
    - Fallback to hardcoded pernr
@@ -219,8 +219,8 @@ Audit:
    
 2. **Child Entities:**
    - Z_ESS_LOAN_REQUEST_ITEM (ZESS_REQ_ITEM, CUD)
-   - Z_ESS_LOAN_REQUEST_DETAILS (ZESS_LOAN_PERSONAL, CUD)
-   - Z_ESS_LOAN_APPROVAL_STEPS (ZESS_APPR_STEP, Read-only)
+   - Z_ESS_LOAN_REQUEST_DETAILS (ZHR_ESS_LOANDTL, CUD)
+   - Z_ESS_LOAN_APPROVAL_STEPS (ZHR_ESS_APPRSTEP, Read-only)
 
 3. **Projections:**
    - ZP_ESS_LOAN_REQUEST (with navigation links)
@@ -316,7 +316,7 @@ Audit:
   - Request Info (ID, Status, Submit Date)
   - Employee Info (Name, Email, Salary, Tenure)
   - Loan Details (Amount, Tenure, EMI, Purpose, Remarks)
-  - Dynamic Custom Fields (rendered per ZESS_CUST_FIELD)
+  - Dynamic Custom Fields (rendered per ZHR_ESS_CUSTFLD)
   - Request Items (read-only list)
   - Approval Timeline (read-only, tabular, showing all levels & comments)
   
@@ -346,7 +346,7 @@ Audit:
 - Confirmation dialog on Create (early validation)
 - Confirmation dialog on Submit (pre-submit validation)
   - Structure: [Validation Section] + [Action Details] + [Proceed/Cancel]
-  - Messages from ZESS_VALIDATION_MSG
+  - Messages from ZHR_ESS_VALMSG
   - Errors block proceed, warnings allow
 - Real-time validation as user types
 - Inline error messages on fields

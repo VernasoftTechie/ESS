@@ -177,20 +177,20 @@ ZHR_ESS_V1/
 - Future: Parallel approval support (field reserved)
 
 ### 3. Dynamic Custom Fields ✓
-- Config in `ZESS_CUST_FIELD` (metadata)
-- Values in `ZESS_LOAN_PERSONAL_CUSTOM` (storage)
+- Config in `ZHR_ESS_CUSTFLD` (metadata)
+- Values in `ZHR_ESS_CUSTVAL` (storage)
 - UI renders dynamically — zero code changes for new fields
 
 ### 4. Validation Framework ✓
-- All messages in `ZESS_VALIDATION_MSG` table
+- All messages in `ZHR_ESS_VALMSG` table
 - Parameters for dynamic message formatting
 - Classification (ERROR, WARNING, INFO)
 - Client-specific customization
 
 ### 5. Audit Trail ✓
 - Denormalized fields in `ZESS_REQ_HEAD` (snapshot for audit)
-- `ZESS_CHANGE_LOG` for modifications (who, when, what changed)
-- `ZESS_APPR_STEP` timestamps all approvals
+- `ZHR_ESS_CHGLOG` for modifications (who, when, what changed)
+- `ZHR_ESS_APPRSTEP` timestamps all approvals
 - RAP change documents (secondary layer)
 
 ### 6. Email Flexibility ✓

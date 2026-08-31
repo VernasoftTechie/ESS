@@ -324,13 +324,13 @@ Pos  Field Name            Type       Length   Key
 
 ---
 
-### TABLE 5: ZHR_ESS_LOAN_PERSONAL (Personal Loan Details)
+### TABLE 5: ZHR_ESS_LOANDTL (Personal Loan Details)
 
 **Path:** SE11 → New → Table
 
 | Tab | Field | Value |
 |---|---|---|
-| **Basic** | Table Name | ZHR_ESS_LOAN_PERSONAL |
+| **Basic** | Table Name | ZHR_ESS_LOANDTL |
 | | Short Description | Personal Loan Details |
 | | Delivery Class | A |
 | | Data Class | APPL0 |
@@ -360,13 +360,13 @@ Pos  Field Name          Type       Length   Key  Domain
 
 ---
 
-### TABLE 6: ZHR_ESS_APPR_STEP (Approval Timeline)
+### TABLE 6: ZHR_ESS_APPRSTEP (Approval Timeline)
 
 **Path:** SE11 → New → Table
 
 | Tab | Field | Value |
 |---|---|---|
-| **Basic** | Table Name | ZHR_ESS_APPR_STEP |
+| **Basic** | Table Name | ZHR_ESS_APPRSTEP |
 | | Short Description | Approval Timeline |
 | | Delivery Class | A |
 | | Data Class | APPL0 |
@@ -404,13 +404,13 @@ Pos  Field Name              Type       Length   Key  Domain
 
 ---
 
-### TABLE 7: ZHR_ESS_WF_CONFIG (Approval Matrix)
+### TABLE 7: ZHR_ESS_WFCONFIG (Approval Matrix)
 
 **Path:** SE11 → New → Table
 
 | Tab | Field | Value |
 |---|---|---|
-| **Basic** | Table Name | ZHR_ESS_WF_CONFIG |
+| **Basic** | Table Name | ZHR_ESS_WFCONFIG |
 | | Short Description | Approval Matrix Configuration |
 | | Delivery Class | A |
 | | Data Class | APPL2 (Customizing) |
@@ -447,13 +447,13 @@ Pos  Field Name          Type       Length   Key
 
 ---
 
-### TABLE 8: ZHR_ESS_LOAN_PARAM (Eligibility Parameters)
+### TABLE 8: ZHR_ESS_LOANPRM (Eligibility Parameters)
 
 **Path:** SE11 → New → Table
 
 | Tab | Field | Value |
 |---|---|---|
-| **Basic** | Table Name | ZHR_ESS_LOAN_PARAM |
+| **Basic** | Table Name | ZHR_ESS_LOANPRM |
 | | Short Description | Loan Eligibility Parameters |
 | | Delivery Class | A |
 | | Data Class | APPL2 |
@@ -521,13 +521,13 @@ Pos  Field Name       Type       Length   Key
 
 ---
 
-### TABLE 10: ZHR_ESS_CUST_FIELD (Custom Fields Config)
+### TABLE 10: ZHR_ESS_CUSTFLD (Custom Fields Config)
 
 **Path:** SE11 → New → Table
 
 | Tab | Field | Value |
 |---|---|---|
-| **Basic** | Table Name | ZHR_ESS_CUST_FIELD |
+| **Basic** | Table Name | ZHR_ESS_CUSTFLD |
 | | Short Description | Custom Fields Configuration |
 | | Delivery Class | A |
 | | Data Class | APPL2 |
@@ -561,13 +561,13 @@ Pos  Field Name          Type       Length   Key  Domain
 
 ---
 
-### TABLE 11: ZHR_ESS_LOAN_PERSONAL_CUSTOM (Custom Field Values)
+### TABLE 11: ZHR_ESS_CUSTVAL (Custom Field Values)
 
 **Path:** SE11 → New → Table
 
 | Tab | Field | Value |
 |---|---|---|
-| **Basic** | Table Name | ZHR_ESS_LOAN_PERSONAL_CUSTOM |
+| **Basic** | Table Name | ZHR_ESS_CUSTVAL |
 | | Short Description | Custom Field Values |
 | | Delivery Class | A |
 | | Data Class | APPL0 |
@@ -591,13 +591,13 @@ Pos  Field Name       Type       Length   Key
 
 ---
 
-### TABLE 12: ZHR_ESS_VALIDATION_MSG (Validation Messages)
+### TABLE 12: ZHR_ESS_VALMSG (Validation Messages)
 
 **Path:** SE11 → New → Table
 
 | Tab | Field | Value |
 |---|---|---|
-| **Basic** | Table Name | ZHR_ESS_VALIDATION_MSG |
+| **Basic** | Table Name | ZHR_ESS_VALMSG |
 | | Short Description | Validation Messages |
 | | Delivery Class | A |
 | | Data Class | APPL2 |
@@ -626,13 +626,13 @@ Pos  Field Name       Type       Length   Key  Domain
 
 ---
 
-### TABLE 13: ZHR_ESS_CHANGE_LOG (Audit Trail)
+### TABLE 13: ZHR_ESS_CHGLOG (Audit Trail)
 
 **Path:** SE11 → New → Table
 
 | Tab | Field | Value |
 |---|---|---|
-| **Basic** | Table Name | ZHR_ESS_CHANGE_LOG |
+| **Basic** | Table Name | ZHR_ESS_CHGLOG |
 | | Short Description | Audit Trail / Change Log |
 | | Delivery Class | A |
 | | Data Class | APPL0 |

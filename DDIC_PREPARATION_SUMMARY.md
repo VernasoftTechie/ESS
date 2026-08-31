@@ -96,21 +96,21 @@ All DDIC documentation for Phase 1 is now ready in:
 **Core Transactional (5):**
 1. ZHR_ESS_REQ_HEAD (Root entity, 23 fields)
 2. ZHR_ESS_REQ_ITEM (Child, 8 fields)
-3. ZHR_ESS_LOAN_PERSONAL (1:1 child, 10 fields)
-4. ZHR_ESS_APPR_STEP (Read-only timeline, 14 fields)
+3. ZHR_ESS_LOANDTL (1:1 child, 10 fields)
+4. ZHR_ESS_APPRSTEP (Read-only timeline, 14 fields)
 5. ZHR_ESS_CLIENT (Tenant master, 9 fields)
 
 **Configuration/Customizing (5):**
-6. ZHR_ESS_WF_CONFIG (Approval matrix, 14 fields)
-7. ZHR_ESS_LOAN_PARAM (Eligibility rules, 13 fields)
+6. ZHR_ESS_WFCONFIG (Approval matrix, 14 fields)
+7. ZHR_ESS_LOANPRM (Eligibility rules, 13 fields)
 8. ZHR_ESS_INT_RATE (Interest rates, 5 fields)
-9. ZHR_ESS_CUST_FIELD (Custom field metadata, 12 fields)
+9. ZHR_ESS_CUSTFLD (Custom field metadata, 12 fields)
 10. ZHR_ESS_SERVICE (Loan type catalog, 9 fields)
 
 **Reference/Audit (3):**
-11. ZHR_ESS_VALIDATION_MSG (Validation messages, 7 fields)
-12. ZHR_ESS_LOAN_PERSONAL_CUSTOM (Custom field values, 4 fields)
-13. ZHR_ESS_CHANGE_LOG (Audit trail, 11 fields)
+11. ZHR_ESS_VALMSG (Validation messages, 7 fields)
+12. ZHR_ESS_CUSTVAL (Custom field values, 4 fields)
+13. ZHR_ESS_CHGLOG (Audit trail, 11 fields)
 
 **Total Fields:** 156 fields across all 13 tables
 
@@ -142,20 +142,20 @@ All DDIC documentation for Phase 1 is now ready in:
 - SLA tracking fields for future monitoring
 
 ✅ **Dynamic Custom Fields**
-- Config in ZESS_CUST_FIELD (metadata table)
-- Values in ZESS_LOAN_PERSONAL_CUSTOM (storage table)
+- Config in ZHR_ESS_CUSTFLD (metadata table)
+- Values in ZHR_ESS_CUSTVAL (storage table)
 - Zero code changes for new fields
 
 ✅ **Comprehensive Validation**
-- All messages in ZESS_VALIDATION_MSG table
+- All messages in ZHR_ESS_VALMSG table
 - Parameters for dynamic formatting
 - Classification (ERROR, WARNING, INFO)
 - Client-specific customization
 
 ✅ **Complete Audit Trail**
 - Denormalized fields in ZESS_REQ_HEAD (snapshot)
-- ZESS_CHANGE_LOG (full modification history)
-- ZESS_APPR_STEP (all approval timestamps & comments)
+- ZHR_ESS_CHGLOG (full modification history)
+- ZHR_ESS_APPRSTEP (all approval timestamps & comments)
 - RAP change documents (secondary layer)
 
 ✅ **Temporal Configuration**

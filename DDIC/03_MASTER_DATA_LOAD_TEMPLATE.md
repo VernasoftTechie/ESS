@@ -22,10 +22,10 @@ After all 13 DDIC tables are created and activated, master data will be loaded v
 1. **ZHR_ESS_CLIENT** ← Must exist first (all others FK to this)
 2. **ZHR_ESS_SERVICE** ← Loan type catalog
 3. **ZHR_ESS_INT_RATE** ← Interest rates
-4. **ZHR_ESS_LOAN_PARAM** ← Eligibility rules
-5. **ZHR_ESS_WF_CONFIG** ← Approval matrix
-6. **ZHR_ESS_VALIDATION_MSG** ← Validation messages
-7. **ZHR_ESS_CUST_FIELD** ← Custom fields config (optional for Phase 1)
+4. **ZHR_ESS_LOANPRM** ← Eligibility rules
+5. **ZHR_ESS_WFCONFIG** ← Approval matrix
+6. **ZHR_ESS_VALMSG** ← Validation messages
+7. **ZHR_ESS_CUSTFLD** ← Custom fields config (optional for Phase 1)
 8. **ZHR_ESS_REQ_HEAD** ← Request headers (will be populated via RAP UI)
 9. Other transactional tables ← Auto-populated via RAP actions
 
@@ -140,9 +140,9 @@ Row 3 (CONVLOAN rate - future):
 
 ---
 
-## TABLE 4: ZHR_ESS_LOAN_PARAM
+## TABLE 4: ZHR_ESS_LOANPRM
 
-**Transaction:** SE16 → ZHR_ESS_LOAN_PARAM → Create Entries
+**Transaction:** SE16 → ZHR_ESS_LOANPRM → Create Entries
 
 **Test Data (Phase 1):**
 
@@ -182,9 +182,9 @@ Row 2 (CONVLOAN - Future):
 
 ---
 
-## TABLE 5: ZHR_ESS_WF_CONFIG
+## TABLE 5: ZHR_ESS_WFCONFIG
 
-**Transaction:** SE16 → ZHR_ESS_WF_CONFIG → Create Entries
+**Transaction:** SE16 → ZHR_ESS_WFCONFIG → Create Entries
 
 **Test Data (Phase 1 - 3-Level Approval Chain):**
 
@@ -263,9 +263,9 @@ Row 4 (Level 1 - CONVLOAN - Future):
 
 ---
 
-## TABLE 6: ZHR_ESS_VALIDATION_MSG
+## TABLE 6: ZHR_ESS_VALMSG
 
-**Transaction:** SE16 → ZHR_ESS_VALIDATION_MSG → Create Entries
+**Transaction:** SE16 → ZHR_ESS_VALMSG → Create Entries
 
 **Test Data (Phase 1 - Sample Validation Messages):**
 
@@ -340,9 +340,9 @@ Row 7 (Warning - no remarks):
 
 ---
 
-## TABLE 7: ZHR_ESS_CUST_FIELD (Optional for Phase 1)
+## TABLE 7: ZHR_ESS_CUSTFLD (Optional for Phase 1)
 
-**Transaction:** SE16 → ZHR_ESS_CUST_FIELD → Create Entries
+**Transaction:** SE16 → ZHR_ESS_CUSTFLD → Create Entries
 
 **Test Data (Phase 1 - Optional, skip if not needed yet):**
 
@@ -386,10 +386,10 @@ Row 2 (Custom field - Dropdown):
 
 - ZHR_ESS_REQ_HEAD — Created when user submits request
 - ZHR_ESS_REQ_ITEM — Created for request items
-- ZHR_ESS_LOAN_PERSONAL — Created with request details
-- ZHR_ESS_APPR_STEP — Created at submission (approval chain snapshot)
-- ZHR_ESS_LOAN_PERSONAL_CUSTOM — Created for custom field values
-- ZHR_ESS_CHANGE_LOG — Created for audit trail
+- ZHR_ESS_LOANDTL — Created with request details
+- ZHR_ESS_APPRSTEP — Created at submission (approval chain snapshot)
+- ZHR_ESS_CUSTVAL — Created for custom field values
+- ZHR_ESS_CHGLOG — Created for audit trail
 
 **Do NOT manually load these. They are managed by RAP logic.**
 
@@ -415,14 +415,14 @@ After loading all master data:
 - [ ] active=Y
 - [ ] effective_date ≤ today
 
-### ZHR_ESS_LOAN_PARAM
+### ZHR_ESS_LOANPRM
 - [ ] At least 1 eligibility rule for PERSLOAN
 - [ ] min_amount ≤ max_amount
 - [ ] min_tenure_months ≤ max_tenure_months
 - [ ] salary_multiple > 0
 - [ ] active=Y
 
-### ZHR_ESS_WF_CONFIG
+### ZHR_ESS_WFCONFIG
 - [ ] At least 3 levels for PERSLOAN (bracket-based)
 - [ ] amount_from/amount_to don't overlap
 - [ ] fallback_pernr filled (mandatory)
@@ -430,7 +430,7 @@ After loading all master data:
 - [ ] active=Y
 - [ ] effective_from ≤ today
 
-### ZHR_ESS_VALIDATION_MSG
+### ZHR_ESS_VALMSG
 - [ ] At least 5-7 validation messages loaded
 - [ ] msg_type values are E, W, or I
 - [ ] msg_params comma-separated (if applicable)
@@ -450,7 +450,7 @@ SELECT * FROM ZHR_ESS_CLIENT WHERE active = 'Y'
 SELECT * FROM ZHR_ESS_SERVICE WHERE client_id = '100' AND active = 'Y'
 
 -- Check approval chain
-SELECT * FROM ZHR_ESS_WF_CONFIG 
+SELECT * FROM ZHR_ESS_WFCONFIG 
   WHERE client_id = '100' AND loan_type = 'PERSLOAN' 
   ORDER BY level, amount_from
 
@@ -460,11 +460,11 @@ SELECT * FROM ZHR_ESS_INT_RATE
   ORDER BY effective_date DESC
 
 -- Check eligibility rules
-SELECT * FROM ZHR_ESS_LOAN_PARAM 
+SELECT * FROM ZHR_ESS_LOANPRM 
   WHERE client_id = '100' AND loan_type = 'PERSLOAN'
 
 -- Check validation messages
-SELECT * FROM ZHR_ESS_VALIDATION_MSG 
+SELECT * FROM ZHR_ESS_VALMSG 
   WHERE client_id = '100' AND active = 'Y'
 ```
 

@@ -317,7 +317,7 @@ comment                 STRING      500      Approver comment
 
 ---
 
-## TABLE 5: ZHR_ESS_LOAN_PERSONAL
+## TABLE 5: ZHR_ESS_LOANDTL
 **Description:** Personal Loan Details (1:1 Child)  
 **Application Component:** ZHR_ESS  
 **Data Class:** APPL0  
@@ -346,7 +346,7 @@ comment                 STRING      500      Approver comment
 
 ---
 
-## TABLE 6: ZHR_ESS_APPR_STEP
+## TABLE 6: ZHR_ESS_APPRSTEP
 **Description:** Approval Timeline (Read-Only Child)  
 **Application Component:** ZHR_ESS  
 **Data Class:** APPL0  
@@ -383,7 +383,7 @@ comment                 STRING      500      Approver comment
 
 ---
 
-## TABLE 7: ZHR_ESS_WF_CONFIG
+## TABLE 7: ZHR_ESS_WFCONFIG
 **Description:** Approval Matrix (Customizing)  
 **Application Component:** ZHR_ESS  
 **Data Class:** APPL2  
@@ -423,7 +423,7 @@ comment                 STRING      500      Approver comment
 
 ---
 
-## TABLE 8: ZHR_ESS_LOAN_PARAM
+## TABLE 8: ZHR_ESS_LOANPRM
 **Description:** Loan Eligibility Parameters (Customizing)  
 **Application Component:** ZHR_ESS  
 **Data Class:** APPL2  
@@ -479,7 +479,7 @@ comment                 STRING      500      Approver comment
 
 ---
 
-## TABLE 10: ZHR_ESS_CUST_FIELD
+## TABLE 10: ZHR_ESS_CUSTFLD
 **Description:** Custom Fields Configuration  
 **Application Component:** ZHR_ESS  
 **Data Class:** APPL2  
@@ -510,7 +510,7 @@ comment                 STRING      500      Approver comment
 
 ---
 
-## TABLE 11: ZHR_ESS_LOAN_PERSONAL_CUSTOM
+## TABLE 11: ZHR_ESS_CUSTVAL
 **Description:** Custom Field Values  
 **Application Component:** ZHR_ESS  
 **Data Class:** APPL0  
@@ -520,7 +520,7 @@ comment                 STRING      500      Approver comment
 |---|---|---|---|---|
 | **client_id** | CHAR | 3 | ✓ PK | FK to ZHR_ESS_CLIENT |
 | **request_id** | CHAR | 20 | ✓ PK | FK to ZHR_ESS_REQ_HEAD |
-| **field_key** | CHAR | 30 | ✓ PK | FK to ZHR_ESS_CUST_FIELD.field_key |
+| **field_key** | CHAR | 30 | ✓ PK | FK to ZHR_ESS_CUSTFLD.field_key |
 | field_value | STRING | 1000 | | Polymorphic value (TEXT, AMOUNT, DATE, DROPDOWN) |
 
 **Indexes:**
@@ -529,11 +529,11 @@ comment                 STRING      500      Approver comment
 **Notes:**
 - One row per custom field per request
 - field_value polymorphic (dates as YYYYMMDD, amounts as numbers, etc.)
-- All changes logged in ZHR_ESS_CHANGE_LOG
+- All changes logged in ZHR_ESS_CHGLOG
 
 ---
 
-## TABLE 12: ZHR_ESS_VALIDATION_MSG
+## TABLE 12: ZHR_ESS_VALMSG
 **Description:** Validation Messages (i18n)  
 **Application Component:** ZHR_ESS  
 **Data Class:** APPL2  
@@ -566,7 +566,7 @@ comment                 STRING      500      Approver comment
 
 ---
 
-## TABLE 13: ZHR_ESS_CHANGE_LOG
+## TABLE 13: ZHR_ESS_CHGLOG
 **Description:** Audit Trail  
 **Application Component:** ZHR_ESS  
 **Data Class:** APPL0  
@@ -642,15 +642,15 @@ comment                 STRING      500      Approver comment
 - [ ] ZHR_ESS_SERVICE
 - [ ] ZHR_ESS_REQ_HEAD
 - [ ] ZHR_ESS_REQ_ITEM
-- [ ] ZHR_ESS_LOAN_PERSONAL
-- [ ] ZHR_ESS_APPR_STEP
-- [ ] ZHR_ESS_WF_CONFIG
-- [ ] ZHR_ESS_LOAN_PARAM
+- [ ] ZHR_ESS_LOANDTL
+- [ ] ZHR_ESS_APPRSTEP
+- [ ] ZHR_ESS_WFCONFIG
+- [ ] ZHR_ESS_LOANPRM
 - [ ] ZHR_ESS_INT_RATE
-- [ ] ZHR_ESS_CUST_FIELD
-- [ ] ZHR_ESS_LOAN_PERSONAL_CUSTOM
-- [ ] ZHR_ESS_VALIDATION_MSG
-- [ ] ZHR_ESS_CHANGE_LOG
+- [ ] ZHR_ESS_CUSTFLD
+- [ ] ZHR_ESS_CUSTVAL
+- [ ] ZHR_ESS_VALMSG
+- [ ] ZHR_ESS_CHGLOG
 
 ## Verification Checklist
 - [ ] All tables created successfully in SE11

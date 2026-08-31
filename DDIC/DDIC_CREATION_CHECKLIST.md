@@ -272,14 +272,14 @@
 
 ---
 
-### TABLE 5: ZHR_ESS_LOAN_PERSONAL
+### TABLE 5: ZHR_ESS_LOANDTL
 **Purpose:** Personal Loan Details (1:1 Child)  
 **Key:** (client_id, request_id)  
 **Indexes:** 1
 
 **Creation Steps:**
 - [ ] SE11 → New → Table
-- [ ] Name: ZHR_ESS_LOAN_PERSONAL
+- [ ] Name: ZHR_ESS_LOANDTL
 - [ ] Add 10 fields
 - [ ] Define composite PK
 - [ ] Save & Activate
@@ -301,14 +301,14 @@
 
 ---
 
-### TABLE 6: ZHR_ESS_APPR_STEP
+### TABLE 6: ZHR_ESS_APPRSTEP
 **Purpose:** Approval Timeline (Read-Only Child)  
 **Key:** (client_id, request_id, level, attempt)  
 **Indexes:** 4
 
 **Creation Steps:**
 - [ ] SE11 → New → Table
-- [ ] Name: ZHR_ESS_APPR_STEP
+- [ ] Name: ZHR_ESS_APPRSTEP
 - [ ] Add 14 fields
 - [ ] Define composite PK (4 fields)
 - [ ] Add 3 secondary indexes
@@ -341,14 +341,14 @@
 
 ---
 
-### TABLE 7: ZHR_ESS_WF_CONFIG
+### TABLE 7: ZHR_ESS_WFCONFIG
 **Purpose:** Approval Matrix (Customizing)  
 **Key:** (client_id, loan_type, level)  
 **Indexes:** 3
 
 **Creation Steps:**
 - [ ] SE11 → New → Table
-- [ ] Name: ZHR_ESS_WF_CONFIG
+- [ ] Name: ZHR_ESS_WFCONFIG
 - [ ] Add 14 fields
 - [ ] Define composite PK (3 fields)
 - [ ] Data Class: APPL2 (Customizing)
@@ -381,14 +381,14 @@
 
 ---
 
-### TABLE 8: ZHR_ESS_LOAN_PARAM
+### TABLE 8: ZHR_ESS_LOANPRM
 **Purpose:** Eligibility Parameters (Customizing)  
 **Key:** (client_id, loan_type)  
 **Indexes:** 2
 
 **Creation Steps:**
 - [ ] SE11 → New → Table
-- [ ] Name: ZHR_ESS_LOAN_PARAM
+- [ ] Name: ZHR_ESS_LOANPRM
 - [ ] Add 13 fields
 - [ ] Define composite PK
 - [ ] Data Class: APPL2
@@ -441,14 +441,14 @@
 
 ---
 
-### TABLE 10: ZHR_ESS_CUST_FIELD
+### TABLE 10: ZHR_ESS_CUSTFLD
 **Purpose:** Custom Fields Configuration  
 **Key:** (client_id, loan_type, field_key)  
 **Indexes:** 2
 
 **Creation Steps:**
 - [ ] SE11 → New → Table
-- [ ] Name: ZHR_ESS_CUST_FIELD
+- [ ] Name: ZHR_ESS_CUSTFLD
 - [ ] Add 12 fields
 - [ ] Define composite PK (3 fields)
 - [ ] Data Class: APPL2
@@ -474,14 +474,14 @@
 
 ---
 
-### TABLE 11: ZHR_ESS_LOAN_PERSONAL_CUSTOM
+### TABLE 11: ZHR_ESS_CUSTVAL
 **Purpose:** Custom Field Values  
 **Key:** (client_id, request_id, field_key)  
 **Indexes:** 1
 
 **Creation Steps:**
 - [ ] SE11 → New → Table
-- [ ] Name: ZHR_ESS_LOAN_PERSONAL_CUSTOM
+- [ ] Name: ZHR_ESS_CUSTVAL
 - [ ] Add 4 fields
 - [ ] Define composite PK (3 fields)
 - [ ] Save & Activate
@@ -497,14 +497,14 @@
 
 ---
 
-### TABLE 12: ZHR_ESS_VALIDATION_MSG
+### TABLE 12: ZHR_ESS_VALMSG
 **Purpose:** Validation Messages (i18n)  
 **Key:** (client_id, msg_id)  
 **Indexes:** 2
 
 **Creation Steps:**
 - [ ] SE11 → New → Table
-- [ ] Name: ZHR_ESS_VALIDATION_MSG
+- [ ] Name: ZHR_ESS_VALMSG
 - [ ] Add 7 fields
 - [ ] Define composite PK
 - [ ] Data Class: APPL2
@@ -525,14 +525,14 @@
 
 ---
 
-### TABLE 13: ZHR_ESS_CHANGE_LOG
+### TABLE 13: ZHR_ESS_CHGLOG
 **Purpose:** Audit Trail  
 **Key:** (client_id, request_id, sequence)  
 **Indexes:** 3
 
 **Creation Steps:**
 - [ ] SE11 → New → Table
-- [ ] Name: ZHR_ESS_CHANGE_LOG
+- [ ] Name: ZHR_ESS_CHGLOG
 - [ ] Add 11 fields
 - [ ] Define composite PK (3 fields)
 - [ ] Add 2 secondary indexes
@@ -585,15 +585,15 @@
 - [ ] ZHR_ESS_SERVICE visible
 - [ ] ZHR_ESS_REQ_HEAD visible
 - [ ] ZHR_ESS_REQ_ITEM visible
-- [ ] ZHR_ESS_LOAN_PERSONAL visible
-- [ ] ZHR_ESS_APPR_STEP visible
-- [ ] ZHR_ESS_WF_CONFIG visible
-- [ ] ZHR_ESS_LOAN_PARAM visible
+- [ ] ZHR_ESS_LOANDTL visible
+- [ ] ZHR_ESS_APPRSTEP visible
+- [ ] ZHR_ESS_WFCONFIG visible
+- [ ] ZHR_ESS_LOANPRM visible
 - [ ] ZHR_ESS_INT_RATE visible
-- [ ] ZHR_ESS_CUST_FIELD visible
-- [ ] ZHR_ESS_LOAN_PERSONAL_CUSTOM visible
-- [ ] ZHR_ESS_VALIDATION_MSG visible
-- [ ] ZHR_ESS_CHANGE_LOG visible
+- [ ] ZHR_ESS_CUSTFLD visible
+- [ ] ZHR_ESS_CUSTVAL visible
+- [ ] ZHR_ESS_VALMSG visible
+- [ ] ZHR_ESS_CHGLOG visible
 
 ### Activation Status
 
@@ -660,8 +660,8 @@
 **Interest Rates Loaded:** ___________  
 **Verified By:** ___________
 
-### ZHR_ESS_LOAN_PARAM
-- [ ] Transaction: SE16 → ZHR_ESS_LOAN_PARAM
+### ZHR_ESS_LOANPRM
+- [ ] Transaction: SE16 → ZHR_ESS_LOANPRM
 - [ ] Create 2 eligibility rules (PERSLOAN, CONVLOAN)
 - [ ] Verify min/max values
 - [ ] Check amounts logical
@@ -669,8 +669,8 @@
 **Eligibility Rules Loaded:** ___________  
 **Verified By:** ___________
 
-### ZHR_ESS_WF_CONFIG
-- [ ] Transaction: SE16 → ZHR_ESS_WF_CONFIG
+### ZHR_ESS_WFCONFIG
+- [ ] Transaction: SE16 → ZHR_ESS_WFCONFIG
 - [ ] Create 3-level chain for PERSLOAN
 - [ ] Verify relationship_ids defined
 - [ ] Check fallback_pernr values
@@ -679,8 +679,8 @@
 **Approval Chain Loaded:** ___________  
 **Verified By:** ___________
 
-### ZHR_ESS_VALIDATION_MSG
-- [ ] Transaction: SE16 → ZHR_ESS_VALIDATION_MSG
+### ZHR_ESS_VALMSG
+- [ ] Transaction: SE16 → ZHR_ESS_VALMSG
 - [ ] Create 7+ validation messages
 - [ ] Verify msg_type (E, W, I)
 - [ ] Check msg_params format

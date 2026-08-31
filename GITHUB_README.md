@@ -130,24 +130,24 @@ ESS/
 | ZHR_ESS_CLIENT | Tenant master | 9 | client_id |
 | ZHR_ESS_REQ_HEAD | Request header (root) | 23 | (client_id, request_id) |
 | ZHR_ESS_REQ_ITEM | Request items | 8 | (client_id, request_id, item_seq) |
-| ZHR_ESS_LOAN_PERSONAL | Loan details (1:1 child) | 10 | (client_id, request_id) |
-| ZHR_ESS_APPR_STEP | Approval timeline | 14 | (client_id, request_id, level, attempt) |
+| ZHR_ESS_LOANDTL | Loan details (1:1 child) | 10 | (client_id, request_id) |
+| ZHR_ESS_APPRSTEP | Approval timeline | 14 | (client_id, request_id, level, attempt) |
 
 ### Configuration (5 tables)
 | Table | Purpose | Fields | Key |
 |---|---|---|---|
-| ZHR_ESS_WF_CONFIG | Approval matrix | 14 | (client_id, loan_type, level) |
-| ZHR_ESS_LOAN_PARAM | Eligibility rules | 13 | (client_id, loan_type) |
+| ZHR_ESS_WFCONFIG | Approval matrix | 14 | (client_id, loan_type, level) |
+| ZHR_ESS_LOANPRM | Eligibility rules | 13 | (client_id, loan_type) |
 | ZHR_ESS_INT_RATE | Interest rates | 5 | (client_id, loan_type, eff_date) |
-| ZHR_ESS_CUST_FIELD | Custom fields config | 12 | (client_id, loan_type, field_key) |
+| ZHR_ESS_CUSTFLD | Custom fields config | 12 | (client_id, loan_type, field_key) |
 | ZHR_ESS_SERVICE | Loan type catalog | 9 | (client_id, service_code) |
 
 ### Reference/Audit (3 tables)
 | Table | Purpose | Fields | Key |
 |---|---|---|---|
-| ZHR_ESS_VALIDATION_MSG | Validation messages | 7 | (client_id, msg_id) |
-| ZHR_ESS_LOAN_PERSONAL_CUSTOM | Custom field values | 4 | (client_id, request_id, field_key) |
-| ZHR_ESS_CHANGE_LOG | Audit trail | 11 | (client_id, request_id, sequence) |
+| ZHR_ESS_VALMSG | Validation messages | 7 | (client_id, msg_id) |
+| ZHR_ESS_CUSTVAL | Custom field values | 4 | (client_id, request_id, field_key) |
+| ZHR_ESS_CHGLOG | Audit trail | 11 | (client_id, request_id, sequence) |
 
 **Total: 156 fields across 13 tables**
 
@@ -168,17 +168,17 @@ ESS/
 
 ### ✅ Dynamic Custom Fields
 - Zero-code field additions via metadata tables
-- Config table (ZESS_CUST_FIELD) + values table (ZESS_LOAN_PERSONAL_CUSTOM)
+- Config table (ZHR_ESS_CUSTFLD) + values table (ZHR_ESS_CUSTVAL)
 - UI renders dynamically based on configuration
 
 ### ✅ Comprehensive Validation Framework
-- All messages in reference table (ZESS_VALIDATION_MSG)
+- All messages in reference table (ZHR_ESS_VALMSG)
 - Parameters for dynamic message formatting
 - Classification (ERROR, WARNING, INFO) for UI logic
 
 ### ✅ Complete Audit Trail
 - Denormalized fields in header for offline display
-- Change log table (ZESS_CHANGE_LOG) for all modifications
+- Change log table (ZHR_ESS_CHGLOG) for all modifications
 - Approval step timestamps for compliance
 - RAP change documents as secondary layer
 
@@ -284,7 +284,7 @@ ESS/
 ## ⚙️ Configuration
 
 ### Approval Chain Setup
-Configure in **ZESS_WF_CONFIG** table:
+Configure in **ZHR_ESS_WFCONFIG** table:
 ```
 Level 1: Reports-to (A002) → Manager
 Level 2: Cost Center Manager (A006) → CC Manager
@@ -292,7 +292,7 @@ Level 3: HR Department (HR) → CFO/Director
 ```
 
 ### Eligibility Rules
-Configure in **ZESS_LOAN_PARAM** table:
+Configure in **ZHR_ESS_LOANPRM** table:
 ```
 Min Amount: 50,000
 Max Amount: 2,500,000
