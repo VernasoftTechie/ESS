@@ -1,0 +1,25 @@
+{
+  "master_language": "E",
+  "starting_folder": "/src",
+  "folder_logic": "prefix",
+  "ignore": [
+    "/docs/**",
+    "/.git/**",
+    "/.gitignore",
+    "/README.md",
+    "/PHASE_1_IMPLEMENTATION_PLAN.md",
+    "/BUGS_AND_ISSUES.md",
+    "/LICENSE"
+  ],
+  "dot_abapgit": {
+    "version": 1,
+    "description": "ZHR_ESS_V1 - Employee Self-Service Loan Request Application (RAP)",
+    "type": "abap",
+    "create_package": true
+  },
+  "package": {
+    "name": "ZHR_ESS_V1",
+    "description": "Employee Self-Service Loan Request Application - Phase 1",
+    "order": 10
+  }
+}

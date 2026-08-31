@@ -1,0 +1,64 @@
+# OS files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE files
+.vscode/
+.idea/
+*.iml
+*.sublime-project
+*.sublime-workspace
+
+# SAP/ABAP specific
+*.abap.backup
+*.trace
+*.xml.bak
+
+# Build/Compile artifacts
+*.o
+*.a
+*.so
+*.exe
+*.dll
+
+# Temporary files
+*.tmp
+*.temp
+~$*
+
+# Local development
+local_config/
+.env.local
+secrets/
+
+# Logs
+*.log
+logs/
+
+# Dependencies (if using external libs)
+node_modules/
+vendor/
+
+# macOS
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+desktop.ini
+$RECYCLE.BIN/
+
+# Build directories
+build/
+dist/
+target/
+
+# Cache
+.cache/
+*.cache
+
+# SAP specific exclusions
+/src/**/*.bak
