@@ -6,6 +6,15 @@
 
 ---
 
+## Milestone Status
+
+- ✅ **Stage 1 — DDIC:** 5 domains, 5 data elements, 13 tables (156 fields) — activated, confirmed live. Issues #001–#004.
+- ✅ **Stage 2 — Service Layer:** 6 interfaces, 7 classes — activated, confirmed live. Issues #005–#008.
+- ⏭️ **Stage 3 — RAP Business Object:** not started (CDS views, behavior definitions, determinations/validations/actions).
+- ⏭️ **Stage 4 — Fiori UI:** not started.
+
+---
+
 ## Issue #001: [Template]
 
 - **Date Found:** YYYY-MM-DD
