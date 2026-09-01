@@ -10,7 +10,7 @@
 
 - ✅ **Stage 1 — DDIC:** 5 domains, 5 data elements, 13 tables (156 fields) — activated, confirmed live. Issues #001–#004.
 - ✅ **Stage 2 — Service Layer:** 6 interfaces, 7 classes — activated, confirmed live. Issues #005–#008.
-- ⏭️ **Stage 3 — RAP Business Object:** not started (CDS views, behavior definitions, determinations/validations/actions).
+- 🔄 **Stage 3 — RAP Business Object:** Round A pushed (5 CDS interface views, 5 projection views, 2 behavior definitions, empty behavior class — CRUD + associations only). Not yet activated. Round B (actions/determinations/validations) follows once confirmed. Issue #009.
 - ⏭️ **Stage 4 — Fiori UI:** not started.
 
 ---
@@ -787,6 +787,91 @@ generic built-in type (`c`, `n`, `p`, `x`) needs to appear in a
 signature, always route it through a named data element, DDIC field
 reference, or a `TYPES`-declared type instead of writing the
 length/decimals inline at the parameter.
+
+---
+
+## Issue #009: Stage 3 (RAP BO) — Scope Decisions & One Caught-Before-Push Fix
+
+- **Date Found:** 2026-08-31
+- **Component:** RAP Business Object (`ZI_ESS_*`, `ZC_ESS_*`, `ZBP_I_ESS_REQ_HEAD`)
+- **Severity:** Informational (deliberate scoping) + Low (one format fix, caught pre-push)
+- **Status:** Documented, ready for first Pull + Activate
+
+### Part A — Round A / Round B split (deliberate)
+This first Stage 3 push covers **entities + CRUD + associations only** —
+1 root (`ZI_ESS_REQ_HEAD`/`ZC_ESS_REQ_HEAD`) and 4 children
+(`LOANDTL`, `REQ_ITEM`, `APPRSTEP` read-only, `CUSTVAL`), 36 files total.
+It deliberately does **not** yet include:
+- `submit`/`withdraw` actions
+- `resolveEmployeeData`/`calcEmiSchedule` determinations
+- `validateEligibility` validation
+- Any handler methods in `ZBP_I_ESS_REQ_HEAD` (it's an empty stub)
+
+Reason: RAP determination/validation/action **handler method signatures**
+(`REPORTED`/`FAILED`/`MAPPED` parameters, `for determine on save`, etc.)
+are a category of syntax with **zero verified examples** in the
+reference repo — even its own README describes struggling through
+"three failed guesses" on a *simpler* problem (CDS metadata format)
+before getting a working example. Shipping CRUD-only first gives a
+much smaller, more isolable checkpoint: if this fails, the cause is in
+entities/associations, not tangled up with new handler-method risk.
+Business logic (Round B) will follow as soon as this activates cleanly.
+
+### Part B — `authorization master ( global )` instead of `( instance )`
+The reference repo's own root behavior definition uses
+`authorization master ( instance )` — but per its own README, **none of
+its RAP objects have been activated against a real system**, so that
+combination (instance authorization + a completely empty behavior
+class) is unverified, not a proven pattern. Instance authorization
+requires implementing a `GET INSTANCE AUTHORIZATIONS` handler method;
+global authorization is the simpler declaration, chosen here
+specifically to keep the empty-stub behavior class viable for this
+first pass. If activation demands a handler method even for `global`,
+that will show up as a normal, diagnosable error to fix in the next
+round.
+
+### Part C — Fiori `@UI` annotations kept deliberately minimal
+Only `@UI.headerInfo`, `@UI.facet` (`IDENTIFICATION_REFERENCE` /
+`LINEITEM_REFERENCE` only), `@UI.lineItem`, `@UI.identification`, and
+`@Semantics.amount.currencyCode`/`@Semantics.currencyCode` (root only)
+are used — all patterns already shown activating successfully in the
+reference repo's own `ZC_RAP_MT_HDR`. Richer annotations
+(`@Consumption.valueHelpDefinition`, `@UI.selectionField`,
+`@UI.dataPoint`, `@Search.*`) are deferred to Stage 4 (Fiori UI) as a
+dedicated polish pass, rather than adding more unverified annotation
+shapes on top of an already-large first CDS/BDEF push.
+
+### Part D — Fixed before push: `.ddls.baseinfo` must have NO byte-order mark
+While generating the 10 `.ddls.baseinfo` JSON files, the same generator
+helper used for the `.xml` wrapper files (which correctly need a UTF-8
+BOM, matching every verified DDIC/Service-Layer file) was reused
+uncritically for the JSON files too. A hex-dump check against the
+reference repo's own `.baseinfo` file
+(`zi_rap_mt_hdr.ddls.baseinfo`, starts `7b 0d 0a` — a plain `{`, no
+`ef bb bf` BOM) caught the mismatch before pushing. Added a separate
+`Write-JsonFile` helper (UTF-8, no BOM) for `.baseinfo` files
+specifically. **This is exactly the kind of check that would otherwise
+have become Issue #010** — flagged here as a reminder that every new
+file *type* introduced (not just every new object) needs its own
+byte-level check against a real example, not an assumption that
+"whatever worked for XML will work for JSON in the same repo."
+
+### Test Case / Reproduction
+1. Pull the repo in ABAPGit, Activate.
+2. Expect: 5 interface views, 5 projection views, 2 behavior
+   definitions, and `ZBP_I_ESS_REQ_HEAD` (empty stub) all activate.
+3. If `authorization master ( global )` demands a handler method,
+   that error will name it explicitly — implement per Part B's note.
+4. Once this is confirmed clean, Round B adds actions, determinations,
+   validations, and the real behavior-class logic wiring in the
+   already-activated Service Layer classes.
+
+### Lesson Learned
+Carried forward from Issue #001: always verify a new file *type*
+byte-for-byte against a real example before trusting it, even when a
+sibling file type in the same object family already checked out fine.
+BOM-vs-no-BOM is invisible in a normal text read — only a hex dump
+would have caught it, and did.
 
 ---
 

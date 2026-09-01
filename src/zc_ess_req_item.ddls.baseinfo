@@ -1,0 +1,14 @@
+{
+  "BASEINFO": {
+    "FROM": [
+      "ZI_ESS_REQ_ITEM"
+    ],
+    "ASSOCIATED": [
+      "ZC_ESS_REQ_HEAD",
+      "ZI_ESS_REQ_HEAD"
+    ],
+    "BASE": [
+      "ZI_ESS_REQ_ITEM"
+    ]
+  }
+}

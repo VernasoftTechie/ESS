@@ -1,0 +1,44 @@
+projection;
+strict ( 2 );
+
+define behavior for ZC_ESS_REQ_HEAD alias LoanRequest
+{
+  use create;
+  use update;
+  use delete;
+
+  use association _LoanDetail   { create; }
+  use association _Items        { create; }
+  use association _ApprovalSteps;
+  use association _CustomValues { create; }
+}
+
+define behavior for ZC_ESS_LOANDTL alias LoanDetail
+{
+  use update;
+
+  use association _Header;
+}
+
+define behavior for ZC_ESS_REQ_ITEM alias RequestItem
+{
+  use create;
+  use update;
+  use delete;
+
+  use association _Header;
+}
+
+define behavior for ZC_ESS_APPRSTEP alias ApprovalStep
+{
+  use association _Header;
+}
+
+define behavior for ZC_ESS_CUSTVAL alias CustomFieldValue
+{
+  use create;
+  use update;
+  use delete;
+
+  use association _Header;
+}

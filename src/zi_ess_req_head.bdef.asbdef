@@ -1,0 +1,78 @@
+managed implementation in class zbp_i_ess_req_head unique;
+strict ( 2 );
+
+define behavior for ZI_ESS_REQ_HEAD alias LoanRequest
+persistent table zhr_ess_req_head
+lock master
+authorization master ( global )
+etag master ChangedOn
+{
+  create;
+  update;
+  delete;
+
+  field ( readonly ) ClientId, RequestId, EmployeePernr, EmployeeName, EmployeeEmail,
+                      Status, CurrentLevel, CurrentApproverPernr, CurrentApproverName,
+                      RequestDate, RequestTime, SubmitDate, SubmitTime, Currency,
+                      BasicSalary, CompanyCode, CreatedOn, CreatedBy, ChangedOn, ChangedBy;
+
+  field ( mandatory ) LoanType, Amount, TenureMonths;
+
+  association _LoanDetail   { create; }
+  association _Items        { create; }
+  association _ApprovalSteps;
+  association _CustomValues { create; }
+}
+
+define behavior for ZI_ESS_LOANDTL alias LoanDetail
+persistent table zhr_ess_loandtl
+lock dependent by _Header
+authorization dependent by _Header
+{
+  update;
+
+  field ( readonly ) ClientId, RequestId, EmiAmount, RateOfInterest, RepaymentStart, CreatedOn;
+  field ( mandatory ) Purpose, Amount, TenureMonths;
+
+  association _Header;
+}
+
+define behavior for ZI_ESS_REQ_ITEM alias RequestItem
+persistent table zhr_ess_req_item
+lock dependent by _Header
+authorization dependent by _Header
+{
+  create;
+  update;
+  delete;
+
+  field ( readonly ) ClientId, RequestId, ItemSequence, CreatedOn;
+
+  association _Header;
+}
+
+define behavior for ZI_ESS_APPRSTEP alias ApprovalStep
+persistent table zhr_ess_apprstep
+lock dependent by _Header
+authorization dependent by _Header
+{
+  field ( readonly ) ClientId, RequestId, ApprLevel, Attempt, ApproverPernr, ApproverName,
+                      RelationshipIdUsed, Status, DecidedByPernr, DecidedOn, DecidedTime,
+                      ApprComment, SlaDueDate, SlaBreached;
+
+  association _Header;
+}
+
+define behavior for ZI_ESS_CUSTVAL alias CustomFieldValue
+persistent table zhr_ess_custval
+lock dependent by _Header
+authorization dependent by _Header
+{
+  create;
+  update;
+  delete;
+
+  field ( readonly ) ClientId, RequestId, FieldKey;
+
+  association _Header;
+}
