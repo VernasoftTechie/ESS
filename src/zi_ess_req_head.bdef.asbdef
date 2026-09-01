@@ -18,6 +18,14 @@ etag master ChangedOn
 
   field ( mandatory ) LoanType, Amount, TenureMonths;
 
+  determination resolveEmployeeData on modify { create; }
+  determination calcEmiSchedule     on modify { field Amount, TenureMonths; }
+
+  validation validateEligibility on save { create; field Amount, TenureMonths, LoanType; }
+
+  action submit   result [1] $self;
+  action withdraw result [1] $self;
+
   association _LoanDetail   { create; }
   association _Items        { create; }
   association _ApprovalSteps;

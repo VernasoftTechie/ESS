@@ -7,6 +7,9 @@ define behavior for ZC_ESS_REQ_HEAD alias LoanRequest
   use update;
   use delete;
 
+  use action submit;
+  use action withdraw;
+
   use association _LoanDetail   { create; }
   use association _Items        { create; }
   use association _ApprovalSteps;

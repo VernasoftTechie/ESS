@@ -11,7 +11,7 @@
 - ✅ **Stage 1 — DDIC:** 5 domains, 5 data elements, 13 tables (156 fields) — activated, confirmed live. Issues #001–#004.
 - ✅ **Stage 2 — Service Layer:** 6 interfaces, 7 classes — activated, confirmed live. Issues #005–#008.
 - ✅ **Stage 3 Round A — RAP Business Object (entities):** 5 CDS interface views, 5 projection views, 2 behavior definitions, empty behavior class — CRUD + associations only. Activated, confirmed live. Issues #009–#010.
-- 🔄 **Stage 3 Round B — RAP Business Object (business logic):** not started. Adds `submit`/`withdraw` actions, `resolveEmployeeData`/`calcEmiSchedule` determinations, `validateEligibility` validation, and real handler-method logic in `ZBP_I_ESS_REQ_HEAD` calling the already-activated Service Layer.
+- 🔄 **Stage 3 Round B — RAP Business Object (business logic):** pushed, **not yet activated, completely unverified** (zero matching examples this session — see Issue #011). `submit`/`withdraw` actions, `resolveEmployeeData`/`calcEmiSchedule` determinations, `validateEligibility` validation, real handler-method logic in `ZBP_I_ESS_REQ_HEAD` calling the Service Layer.
 - ⏭️ **Stage 4 — Fiori UI:** not started.
 
 ---
@@ -950,6 +950,93 @@ against the one that worked rather than reasoning from RAP
 documentation abstractly. This is the same diagnostic approach that
 worked for Issue #007 (comparing the one failing class against 6
 working ones).
+
+---
+
+## Issue #011: Stage 3 Round B — Business Logic (Highest-Risk Piece, Zero Verified Examples)
+
+- **Date Found:** 2026-08-31
+- **Component:** `ZBP_I_ESS_REQ_HEAD` (determinations, validation, actions), `zi_ess_req_head.bdef.asbdef`, `zc_ess_req_head.bdef.asbdef`
+- **Severity:** N/A — pre-emptive documentation, not a bug found yet
+- **Status:** Pushed, **completely unverified**, awaiting first activation attempt
+
+### Description
+Round B adds real business logic on top of the activated Round A
+entity skeleton:
+- **Determinations:** `resolveEmployeeData` (on create, fills
+  name/email/salary/company from `ZCL_ESS_EMPLOYEE_PROVIDER_HCM`),
+  `calcEmiSchedule` (on Amount/TenureMonths change, fills EMI/rate on
+  the associated `LoanDetail` child from `ZCL_ESS_METADATA_PROVIDER`
+  + `ZCL_ESS_UTILITY`)
+- **Validation:** `validateEligibility` (on save, blocks via
+  `ZCL_ESS_VALIDATION_ENGINE` if any error-severity message)
+- **Actions:** `submit` (resolves the approval chain via
+  `ZCL_ESS_WORKFLOW_ENGINE`, snapshots it into `ZHR_ESS_APPRSTEP` via
+  direct table `INSERT`, moves status to Submitted), `withdraw` (moves
+  status to Withdrawn)
+
+### Why This Is Different From Everything Else So Far
+Every previous issue in this log (#001–#010) was resolved by verifying
+against — or diffing against — a real working example from
+`VernasoftTechie/RAP_Migration_Tool`. **That repo has no determinations,
+validations, or actions with implemented logic anywhere** — its own
+behavior implementation class is a bare empty stub, same starting
+point as Round A's `ZBP_I_ESS_REQ_HEAD`. Everything in this round —
+the `READ ENTITIES`/`MODIFY ENTITIES` syntax, `FOR DETERMINE ON
+MODIFY`/`FOR VALIDATE ON SAVE`/`FOR ACTION ... RESULT` method
+signatures, `%tky`, `%control-<field>`, `TYPE TABLE FOR UPDATE
+<view>\\<alias>`, `failed-<alias>`/`reported-<alias>` — is written from
+general RAP knowledge (extremely standard, consistently documented
+across SAP's own RAP tutorials), not from anything cross-checked this
+session. Treat this round as a genuine first attempt, more like Stage
+1's very first DDIC push than any "fix" since.
+
+### Deliberate Simplifications (to reduce what can be wrong)
+1. **No populated `%msg` on validation failures.** `failed-loanrequest`
+   and `reported-loanrequest` are populated with just `%tky` — this
+   blocks save correctly, but the UI won't show the actual validation
+   message text yet (would need a custom message class implementing
+   `IF_ABAP_BEHV_MESSAGE`, itself another unverified construct). Rich
+   message display is a clearly separate follow-up once this activates.
+2. **No instance-level feature control.** `submit`/`withdraw` are
+   plain actions, not `action ( features : instance )` — so their
+   buttons would show as always-enabled in Fiori regardless of status,
+   relying on the handler method's own status check (already
+   implemented: `IF Status <> 'D' AND Status <> 'R'` etc.) to reject
+   invalid attempts via `failed`. Dynamic button enablement needs a
+   `FOR FEATURES` handler method — another new signature, deferred.
+3. **`calcEmiSchedule` assumes `LoanDetail` already exists** for the
+   request (created together via deep-create) when it fires. If a
+   client update touches Amount/TenureMonths before `LoanDetail` is
+   created in the same transaction, the `MODIFY ENTITIES ... ENTITY
+   LoanDetail` update would have no matching row — not yet handled
+   defensively.
+4. **`ZHR_ESS_APPRSTEP` rows are written via a direct classic `INSERT`**,
+   bypassing RAP entirely (matches the Round A design: that entity has
+   no RAP `create` exposed, by design — see Issue #010's note on
+   `ZI_ESS_APPRSTEP` being a read-only, system-managed child). This
+   *should* be safe within the same LUW as the enclosing action, but
+   is a different pattern from everything else in this file and worth
+   double-checking if approval steps don't appear after submit.
+
+### Test Case / Reproduction
+1. Pull the repo in ABAPGit, Activate.
+2. Given the above, **expect at least one round of real syntax errors** —
+   this is the most syntax-dense, least-precedented file in the whole
+   repository so far.
+3. Test data needed for a real `submit` test: `ZHR_ESS_WFCONFIG` rows
+   for the loan type/client (already documented in
+   `DDIC/03_MASTER_DATA_LOAD_TEMPLATE.md`), and an employee `pernr`
+   the `ZCL_ESS_EMPLOYEE_PROVIDER_HCM` can actually resolve (real HR
+   master data, not synthetic).
+
+### Lesson Learned (pre-emptive)
+Not every fix in this project has come from cross-checking a known
+example — sometimes (like here) there simply isn't one available, and
+the honest move is to say so plainly rather than implying a false
+confidence level. This entry exists specifically so the next real
+error's diagnosis starts from "this was never verified" rather than
+"this should have worked."
 
 ---
 
