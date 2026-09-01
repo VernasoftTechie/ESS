@@ -1170,6 +1170,68 @@ before the first attempt.
 
 ---
 
+## Issue #014: Local class name collided with a stray global object
+
+- **Date Found:** 2026-08-31
+- **Component:** `ZBP_I_ESS_REQ_HEAD` Local Types (`lhc_LoanRequest`)
+- **Severity:** Critical (blocked activation entirely)
+- **Status:** ✅ Resolved
+
+### Description
+After Issue #013's restructuring didn't take effect via abapGit Pull
+(confirmed: the Local Types section was completely empty — the
+`.clas.locals_def.abap`/`.clas.locals_imp.abap` files hadn't merged
+in), the local class was created manually via ADT's own UI instead.
+Pasting it produced a new, different error:
+```
+You may not define the global class LHC_LOANREQUEST in class
+ZBP_I_ESS_REQ_HEAD
+```
+
+### Root Cause
+A **global** object named `LHC_LOANREQUEST` already existed somewhere
+in the system — almost certainly a leftover from one of the earlier
+failed abapGit merge attempts (Issue #012/#013), where the
+misconfigured pull may have registered the local class content as a
+standalone global object instead of nesting it correctly. ABAP does
+not allow a local class to share a name with an existing global class
+anywhere in the system — hence the conflict the moment
+`lhc_LoanRequest` was defined locally.
+
+### Resolution
+Renamed the local handler class from `lhc_LoanRequest` to
+**`lhc_ess_loanrequest`** everywhere:
+- `zbp_i_ess_req_head.clas.locals_def.abap`
+- `zbp_i_ess_req_head.clas.locals_imp.abap`
+
+No stray object was deleted (by choice — the user preferred not to);
+renaming sidesteps the collision entirely rather than requiring a
+hunt-and-delete. The BDEF/global class references are unaffected —
+only the local class's own name changed, and nothing else refers to it
+by name (the framework locates the local handler class by scanning the
+global class's local includes, not by name matching against the BDEF).
+
+### Test Case / Reproduction
+1. Paste the corrected (renamed) content into the Local Types tab of
+   `ZBP_I_ESS_REQ_HEAD` in ADT, replacing what's there.
+2. Save and Activate. Expect the naming-collision error gone.
+3. Separately: since abapGit's file-based Pull never actually merged
+   the local class in (Issue #013's fix didn't take effect over the
+   wire, only worked when typed directly via ADT), a genuine open
+   question remains for **whether abapGit can push this content back
+   up** cleanly on the next Stage/Commit — worth watching on the next
+   Stage 4 push involving this same object.
+
+### Lesson Learned
+When a fix that looks structurally correct still doesn't take effect
+after a Pull, don't assume the *content* is wrong before ruling out
+whether it *arrived* at all — Issue #013 diagnosed the right target
+shape, but the delivery mechanism (abapGit merging separate
+locals_def/locals_imp files into an existing class) turned out to be
+the actual gap, not anything about the ABAP itself.
+
+---
+
 ## Known Issues & Resolutions (Phase 1)
 
 ### 1. Email Source Fallback
