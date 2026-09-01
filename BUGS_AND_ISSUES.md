@@ -584,7 +584,7 @@ template.
 - **Date Found:** 2026-08-31
 - **Component:** `ZCL_ESS_EMPLOYEE_PROVIDER_HCM`
 - **Severity:** Medium (blocked 1 of 13 objects; the other 12 imported successfully after Issue #006's fix)
-- **Status:** First mitigation **ruled out** (recurred identically after removing TRY/CATCH); second mitigation applied, **root cause still not confirmed**
+- **Status:** ✅ **Resolved, confirmed** — the class now imports and opens in SE24/Class Builder (see Issue #008 for the next, unrelated error found once inside)
 
 ### Description
 After fixing Issue #006, re-pulling imported all 6 interfaces and 6 of
@@ -676,16 +676,108 @@ from this end).
    be good news (confirms the scanning-level issue is gone) and is
    separately actionable per the note in `is_suspended()`.
 
+### Confirmed Resolved
+The class now imports successfully and opens in SE24 Class Builder —
+confirmed by the user pulling and seeing the class display, hitting a
+genuinely different, ordinary ABAP syntax error next (Issue #008)
+rather than the scanning error. Whichever of `CONSTANTS:` or the
+`EXPORTING`-only methods was the actual cause (both were removed
+together, so which one specifically remains unknown) — abapGit's
+source scan now succeeds on this file.
+
 ### Lesson Learned
 Not every abapGit import failure is a naming/metadata problem like
-Issues #001-#006 — this is a different failure *class* entirely
+Issues #001-#006 — this was a different failure *class* entirely
 (source-level parsing, not catalog registration). The first
-single-factor guess (TRY/CATCH) was wrong; a more disciplined
-line-by-line diff against working files surfaced two other candidates,
-and both got removed together this time rather than repeating another
-slow one-at-a-time guess cycle. If this attempt is also wrong, the next
-step should be an actual bisection (strip the file down, rebuild
-piece-by-piece) rather than a third open-ended guess.
+single-factor guess (TRY/CATCH) was wrong and got ruled out cleanly by
+retesting; a more disciplined line-by-line diff against working files
+surfaced two other candidates, and removing both together this time
+(rather than repeating another slow one-at-a-time cycle) worked.
+
+---
+
+## Issue #008: "A RETURNING parameter must be fully typed" (generic inline P-type)
+
+- **Date Found:** 2026-08-31
+- **Component:** `ZCL_ESS_EMPLOYEE_PROVIDER_HCM` (also fixed proactively in `ZIF_ESS_EMPLOYEE_PROVIDER`)
+- **Severity:** Low (single, ordinary syntax error — not a scanning/import-level issue)
+- **Status:** ✅ Resolved
+
+### Description
+With Issue #007 resolved, the class now opens in SE24 Class Builder,
+which reported a normal activation error:
+```
+Private Section ZCL_ESS_EMPLOYEE_PROVIDER_HCM, Line 38
+A RETURNING parameter must be fully typed.
+```
+Pointing at:
+```abap
+METHODS read_pa0008
+  IMPORTING
+    !iv_pernr        TYPE pernr_d
+    !iv_key_date     TYPE dats
+  RETURNING
+    VALUE(rv_salary) TYPE p LENGTH 8 DECIMALS 2 .
+```
+
+### Root Cause
+`TYPE p LENGTH n DECIMALS m` (an inline, fully-specified packed-number
+type) is valid in `DATA`/`TYPES`/`CONSTANTS` statements, but **method
+signature parameters** (`IMPORTING`/`EXPORTING`/`CHANGING`/`RETURNING`)
+only accept a `TYPE <named-type>` reference — a data element, a
+`TYPES`-defined type, or an object type — not an inline compound type
+specification with `LENGTH`/`DECIMALS` add-ons. ABAP's parser treats
+`TYPE p` in that position as the bare *generic* type `p` (since it
+can't attach the length/decimals there), which is exactly what "must
+be fully typed" means.
+
+The identical pattern in `ZIF_ESS_EMPLOYEE_PROVIDER`'s `TYPES: BEGIN OF
+ty_employee_data ... basic_salary TYPE p LENGTH 8 DECIMALS 2, END OF`
+is **not** an error — that's a structure *component* inside a `TYPES`
+statement, a different grammar position where inline `LENGTH`/
+`DECIMALS` is allowed. It only became a problem the moment the exact
+same clause was reused on a method parameter.
+
+### Resolution
+Replaced the inline generic type with a reference to the actual DDIC
+field this value represents, matching the pattern already used for
+every other business-data parameter in the codebase:
+```abap
+RETURNING
+  VALUE(rv_salary) TYPE zhr_ess_req_head-basic_salary .
+```
+`ZHR_ESS_REQ_HEAD-BASIC_SALARY` is `DEC(15,2)`, which is the exact same
+underlying packed representation as `P LENGTH 8 DECIMALS 2` — no
+semantic change, just a named reference instead of an inline spec.
+
+Also proactively updated `ZIF_ESS_EMPLOYEE_PROVIDER`'s
+`ty_employee_data-basic_salary` to the same DDIC reference for
+consistency, even though it wasn't erroring — one less place using an
+inline generic spec that could bite again if ever copied into a
+parameter position later.
+
+**Audited the entire Service Layer** for the same class of mistake —
+searched every `.clas.abap`/`.intf.abap` for bare `TYPE c`/`n`/`p`/`x`
+(the four ABAP built-in types that are generic without a length/
+decimals qualifier) and for every `RETURNING`/`VALUE(...)` declaration
+across all 13 objects. This was the only occurrence; everything else
+already referenced named data elements, DDIC fields, or `TYPES`-
+declared structures/tables.
+
+### Test Case / Reproduction
+1. Pull the repo in ABAPGit, Import, then Activate
+   `ZCL_ESS_EMPLOYEE_PROVIDER_HCM` (and re-check `ZIF_ESS_EMPLOYEE_PROVIDER`
+   if previously activated).
+2. Expect no "must be fully typed" error this time.
+
+### Lesson Learned
+A construct being valid in one ABAP statement type doesn't mean it's
+valid in another that looks similar — `TYPE p LENGTH n DECIMALS m` is
+fine in `TYPES`/`DATA` but not in a method's parameter list. When a
+generic built-in type (`c`, `n`, `p`, `x`) needs to appear in a
+signature, always route it through a named data element, DDIC field
+reference, or a `TYPES`-declared type instead of writing the
+length/decimals inline at the parameter.
 
 ---
 

@@ -17,7 +17,7 @@ INTERFACE zif_ess_employee_provider
       email              TYPE string,
       phone              TYPE string,
       hire_date          TYPE dats,
-      basic_salary       TYPE p LENGTH 8 DECIMALS 2,
+      basic_salary       TYPE zhr_ess_req_head-basic_salary,
       company_code       TYPE bukrs,
       cost_center        TYPE kostl,
       employee_group     TYPE persg,

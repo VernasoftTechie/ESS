@@ -44,7 +44,7 @@ CLASS zcl_ess_employee_provider_hcm DEFINITION
         !iv_pernr        TYPE pernr_d
         !iv_key_date     TYPE dats
       RETURNING
-        VALUE(rv_salary) TYPE p LENGTH 8 DECIMALS 2 .
+        VALUE(rv_salary) TYPE zhr_ess_req_head-basic_salary .
 
     METHODS read_employee_name
       IMPORTING
