@@ -2,7 +2,8 @@ CLASS zbp_i_ess_req_head DEFINITION
   PUBLIC
   ABSTRACT
   FINAL
-  CREATE PUBLIC .
+  CREATE PUBLIC
+  INHERITING FROM cl_abap_behavior_handler .
 
   PUBLIC SECTION.
 

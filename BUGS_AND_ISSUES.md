@@ -1040,6 +1040,60 @@ error's diagnosis starts from "this was never verified" rather than
 
 ---
 
+## Issue #012: Behavior handler class must inherit CL_ABAP_BEHAVIOR_HANDLER
+
+- **Date Found:** 2026-08-31
+- **Component:** `ZBP_I_ESS_REQ_HEAD`
+- **Severity:** Critical (blocked activation of the whole class)
+- **Status:** ✅ Resolved
+
+### Description
+First activation attempt of Round B's behavior class gave:
+```
+The local class "ZBP_I_ESS_REQ_HEAD" must be derived from
+"CL_ABAP_BEHAVIOR_HANDLER" to define BEHAVIOR methods.
+```
+
+### Root Cause
+A class that implements RAP handler methods (`FOR DETERMINE`, `FOR
+VALIDATE`, `FOR MODIFY ... FOR ACTION`) must inherit from the
+framework base class `CL_ABAP_BEHAVIOR_HANDLER` — that base class is
+what makes the special `FOR ...` method syntax legal. This was simply
+missing from the class definition.
+
+This wasn't caught by cross-checking the reference repo's
+`ZBP_I_RAP_MT_HDR` because that class is an **empty stub with zero
+handler methods** — the "must be derived from" check only fires once a
+class actually *defines* a behavior handler method, which Round A
+never did (by design — see Issue #009). Round B is the first place in
+this whole project where a class with real `FOR ...` methods exists,
+so this is the first place the requirement could show up at all.
+
+### Resolution
+```abap
+CLASS zbp_i_ess_req_head DEFINITION
+  PUBLIC
+  ABSTRACT
+  FINAL
+  CREATE PUBLIC
+  INHERITING FROM cl_abap_behavior_handler .
+```
+
+### Test Case / Reproduction
+1. Pull the repo in ABAPGit, Activate `ZBP_I_ESS_REQ_HEAD`.
+2. Expect this specific error gone; other errors (if any) unrelated to
+   this fix will now be visible for the first time underneath it.
+
+### Lesson Learned
+An "already checked this shape against the reference repo" file can
+still be missing something the reference never needed to prove,
+because the reference's version of that file never exercised the
+feature in question (here: any handler method at all). The absence of
+an error in a simpler example doesn't confirm a requirement doesn't
+exist — it can just mean that example never triggered the check.
+
+---
+
 ## Known Issues & Resolutions (Phase 1)
 
 ### 1. Email Source Fallback
