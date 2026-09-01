@@ -1094,6 +1094,82 @@ exist — it can just mean that example never triggered the check.
 
 ---
 
+## Issue #013: Handler methods belong in a LOCAL class, not the global behavior class
+
+- **Date Found:** 2026-08-31
+- **Component:** `ZBP_I_ESS_REQ_HEAD`
+- **Severity:** Critical (blocked activation)
+- **Status:** ✅ Resolved
+
+### Description
+Issue #012's fix (`INHERITING FROM cl_abap_behavior_handler` on the
+global class) produced a *different* error, not the same one again:
+```
+Local classes of "CL_ABAP_BEHAVIOR_HANDLER" can only be derived in the
+"Local Definitions/Implementations" of a global BEHAVIOR class.
+```
+
+### Root Cause
+Standard RAP structure was backwards in the previous fix. The correct
+shape is:
+- The **global** class (`ZBP_I_ESS_REQ_HEAD`, referenced by the BDEF's
+  `managed implementation in class zbp_i_ess_req_head`) stays a bare,
+  non-inheriting shell — exactly what it was in Round A, and exactly
+  what the reference repo's own equivalent class already showed.
+- The actual handler methods (`FOR DETERMINE`/`FOR VALIDATE`/`FOR
+  MODIFY ... FOR ACTION`) live in a separate **local** class defined
+  inside that global class's "Local Definitions/Implementations" —
+  and *that* local class is the one that inherits
+  `CL_ABAP_BEHAVIOR_HANDLER`.
+
+In file terms (per standard abapGit class-include naming), that local
+class's definition and implementation are two more files alongside the
+main `.clas.abap`:
+- `zbp_i_ess_req_head.clas.locals_def.abap` — `CLASS lhc_LoanRequest
+  DEFINITION INHERITING FROM cl_abap_behavior_handler.` with the 5
+  method signatures
+- `zbp_i_ess_req_head.clas.locals_imp.abap` — `CLASS lhc_LoanRequest
+  IMPLEMENTATION.` with the 5 method bodies (unchanged from Issue #011)
+
+This wasn't visible in Round A because that class never had a local
+types include at all — this requirement only exists for classes doing
+what Round B introduced for the first time in this project.
+
+### Resolution
+1. Reverted `zbp_i_ess_req_head.clas.abap` to the bare stub shape
+   (no inheritance, empty sections) — same as Round A.
+2. Moved the 5 method **signatures** into a new
+   `zbp_i_ess_req_head.clas.locals_def.abap`, in a local class
+   `lhc_LoanRequest DEFINITION INHERITING FROM cl_abap_behavior_handler`.
+3. Moved the 5 method **bodies** (unchanged logic) into a new
+   `zbp_i_ess_req_head.clas.locals_imp.abap`, `CLASS lhc_LoanRequest
+   IMPLEMENTATION`.
+4. Set `<CLSCCINCL>X</CLSCCINCL>` in `zbp_i_ess_req_head.clas.xml`'s
+   `VSEOCLASS` block — the flag marking a class as having a local
+   types include, which it genuinely has now.
+
+The BDEF source needed **no change** — `managed implementation in
+class zbp_i_ess_req_head` still correctly names the global class; the
+framework locates the nested local handler class automatically.
+
+### Test Case / Reproduction
+1. Pull the repo in ABAPGit, Activate.
+2. Expect the "must be derived from"/"can only be derived in Local
+   Definitions" errors both gone.
+
+### Lesson Learned
+Two errors in a row on the same file, each pointing at a real
+requirement, isn't a sign of guessing randomly — it's the normal shape
+of correcting a structural misunderstanding one layer at a time: first
+"you need this base class," then "not there, here." Worth noting for
+next time: go check whether a construct needs to live in a *local*
+class before adding inheritance to a *global* one — this is a
+well-known RAP convention (global behavior class + local handler
+class) that a moment's more research up front would have caught
+before the first attempt.
+
+---
+
 ## Known Issues & Resolutions (Phase 1)
 
 ### 1. Email Source Fallback
