@@ -9,30 +9,35 @@ CLASS zcl_ess_employee_provider_hcm DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    CONSTANTS:
-      gc_subty_basic_salary TYPE subty VALUE '1000',
-      gc_subty_email        TYPE subty VALUE '0010',
-      gc_subty_phone        TYPE subty VALUE '0020'.
+    TYPES:
+      BEGIN OF ty_pa0000_result,
+        hire_date TYPE dats,
+        is_active TYPE abap_bool,
+        found     TYPE abap_bool,
+      END OF ty_pa0000_result .
+
+    TYPES:
+      BEGIN OF ty_pa0001_result,
+        company_code      TYPE bukrs,
+        cost_center       TYPE kostl,
+        employee_group    TYPE persg,
+        employee_subgroup TYPE persk,
+        found             TYPE abap_bool,
+      END OF ty_pa0001_result .
 
     METHODS read_pa0000
       IMPORTING
-        !iv_pernr     TYPE pernr_d
-        !iv_key_date  TYPE dats
-      EXPORTING
-        !ev_hire_date TYPE dats
-        !ev_is_active TYPE abap_bool
-        !ev_found     TYPE abap_bool .
+        !iv_pernr        TYPE pernr_d
+        !iv_key_date     TYPE dats
+      RETURNING
+        VALUE(rs_result) TYPE ty_pa0000_result .
 
     METHODS read_pa0001
       IMPORTING
-        !iv_pernr             TYPE pernr_d
-        !iv_key_date          TYPE dats
-      EXPORTING
-        !ev_company_code      TYPE bukrs
-        !ev_cost_center       TYPE kostl
-        !ev_employee_group    TYPE persg
-        !ev_employee_subgroup TYPE persk
-        !ev_found             TYPE abap_bool .
+        !iv_pernr        TYPE pernr_d
+        !iv_key_date     TYPE dats
+      RETURNING
+        VALUE(rs_result) TYPE ty_pa0001_result .
 
     METHODS read_pa0008
       IMPORTING
@@ -76,54 +81,29 @@ CLASS zcl_ess_employee_provider_hcm IMPLEMENTATION.
 
   METHOD zif_ess_employee_provider~get_employee_data.
 
-    DATA: lv_hire_date TYPE dats,
-          lv_active    TYPE abap_bool,
-          lv_found_00  TYPE abap_bool,
-          lv_cc        TYPE bukrs,
-          lv_kostl     TYPE kostl,
-          lv_persg     TYPE persg,
-          lv_persk     TYPE persk,
-          lv_found_01  TYPE abap_bool.
-
     CLEAR rs_data.
     rs_data-pernr = iv_pernr.
 
-    read_pa0000(
-      EXPORTING
-        iv_pernr     = iv_pernr
-        iv_key_date  = iv_key_date
-      IMPORTING
-        ev_hire_date = lv_hire_date
-        ev_is_active = lv_active
-        ev_found     = lv_found_00 ).
+    DATA(ls_pa0000) = read_pa0000( iv_pernr = iv_pernr iv_key_date = iv_key_date ).
 
-    IF lv_found_00 = abap_false.
+    IF ls_pa0000-found = abap_false.
       rs_data-is_found = abap_false.
       RETURN.
     ENDIF.
 
-    read_pa0001(
-      EXPORTING
-        iv_pernr             = iv_pernr
-        iv_key_date          = iv_key_date
-      IMPORTING
-        ev_company_code      = lv_cc
-        ev_cost_center       = lv_kostl
-        ev_employee_group    = lv_persg
-        ev_employee_subgroup = lv_persk
-        ev_found             = lv_found_01 ).
+    DATA(ls_pa0001) = read_pa0001( iv_pernr = iv_pernr iv_key_date = iv_key_date ).
 
     rs_data-employee_name     = read_employee_name( iv_pernr = iv_pernr iv_key_date = iv_key_date ).
-    rs_data-hire_date         = lv_hire_date.
-    rs_data-is_active         = lv_active.
-    rs_data-company_code      = lv_cc.
-    rs_data-cost_center       = lv_kostl.
-    rs_data-employee_group    = lv_persg.
-    rs_data-employee_subgroup = lv_persk.
+    rs_data-hire_date         = ls_pa0000-hire_date.
+    rs_data-is_active         = ls_pa0000-is_active.
+    rs_data-company_code      = ls_pa0001-company_code.
+    rs_data-cost_center       = ls_pa0001-cost_center.
+    rs_data-employee_group    = ls_pa0001-employee_group.
+    rs_data-employee_subgroup = ls_pa0001-employee_subgroup.
     rs_data-basic_salary      = read_pa0008( iv_pernr = iv_pernr iv_key_date = iv_key_date ).
     rs_data-is_probation      = is_on_probation( iv_pernr = iv_pernr iv_key_date = iv_key_date ).
     rs_data-is_suspended      = is_suspended( iv_pernr = iv_pernr iv_key_date = iv_key_date ).
-    rs_data-service_days      = calculate_service_days( iv_hire_date = lv_hire_date iv_key_date = iv_key_date ).
+    rs_data-service_days      = calculate_service_days( iv_hire_date = ls_pa0000-hire_date iv_key_date = iv_key_date ).
 
     DATA(ls_contact) = zif_ess_employee_provider~get_employee_contact_info(
                           iv_pernr    = iv_pernr
@@ -145,8 +125,9 @@ CLASS zcl_ess_employee_provider_hcm IMPLEMENTATION.
 * etc.) lives in infotype 0105 "Communication". Implemented against
 * the factually correct standard infotype (0105) as primary, keeping
 * PA0006 as a genuine fallback for phone only (PA0006-TELNR is a real
-* standard field). Adjust gc_subty_email / gc_subty_phone to match
-* your system's T591A subtype configuration for infotype 0105.
+* standard field). Subtypes '0010' (email) / '0020' (phone) are common
+* defaults - adjust to match your system's T591A configuration for
+* infotype 0105 if different.
 
     DATA: lv_email  TYPE string,
           lv_phone  TYPE string,
@@ -155,7 +136,7 @@ CLASS zcl_ess_employee_provider_hcm IMPLEMENTATION.
     SELECT SINGLE usrid_long FROM pa0105
       INTO @lv_email
       WHERE pernr = @iv_pernr
-        AND subty = @gc_subty_email
+        AND subty = '0010'
         AND begda <= @iv_key_date
         AND endda >= @iv_key_date.
 
@@ -168,7 +149,7 @@ CLASS zcl_ess_employee_provider_hcm IMPLEMENTATION.
     SELECT SINGLE usrid_long FROM pa0105
       INTO @lv_phone
       WHERE pernr = @iv_pernr
-        AND subty = @gc_subty_phone
+        AND subty = '0020'
         AND begda <= @iv_key_date
         AND endda >= @iv_key_date.
 
@@ -210,8 +191,6 @@ CLASS zcl_ess_employee_provider_hcm IMPLEMENTATION.
 
   METHOD read_pa0000.
 
-    CLEAR: ev_hire_date, ev_is_active, ev_found.
-
     DATA lv_stat2 TYPE stat2.
 
     SELECT SINGLE stat2 FROM pa0000
@@ -221,17 +200,17 @@ CLASS zcl_ess_employee_provider_hcm IMPLEMENTATION.
         AND endda >= @iv_key_date.
 
     IF sy-subrc = 0.
-      ev_found     = abap_true.
-      ev_is_active = COND #( WHEN lv_stat2 = '3' THEN abap_true ELSE abap_false ).
+      rs_result-found     = abap_true.
+      rs_result-is_active = COND #( WHEN lv_stat2 = '3' THEN abap_true ELSE abap_false ).
     ELSE.
-      ev_found = abap_false.
+      rs_result-found = abap_false.
       RETURN.
     ENDIF.
 
     " True hire date = earliest infotype 0000 record for this pernr,
     " independent of iv_key_date (which only selects the status period).
     SELECT SINGLE MIN( begda ) FROM pa0000
-      INTO @ev_hire_date
+      INTO @rs_result-hire_date
       WHERE pernr = @iv_pernr.
 
   ENDMETHOD.
@@ -239,17 +218,15 @@ CLASS zcl_ess_employee_provider_hcm IMPLEMENTATION.
 
   METHOD read_pa0001.
 
-    CLEAR: ev_company_code, ev_cost_center, ev_employee_group,
-           ev_employee_subgroup, ev_found.
-
     SELECT SINGLE bukrs, kostl, persg, persk
       FROM pa0001
-      INTO (@ev_company_code, @ev_cost_center, @ev_employee_group, @ev_employee_subgroup)
+      INTO (@rs_result-company_code, @rs_result-cost_center,
+            @rs_result-employee_group, @rs_result-employee_subgroup)
       WHERE pernr = @iv_pernr
         AND begda <= @iv_key_date
         AND endda >= @iv_key_date.
 
-    ev_found = COND #( WHEN sy-subrc = 0 THEN abap_true ELSE abap_false ).
+    rs_result-found = COND #( WHEN sy-subrc = 0 THEN abap_true ELSE abap_false ).
 
   ENDMETHOD.
 
@@ -259,7 +236,7 @@ CLASS zcl_ess_employee_provider_hcm IMPLEMENTATION.
     SELECT SINGLE bet01 FROM pa0008
       INTO @rv_salary
       WHERE pernr = @iv_pernr
-        AND subty = @gc_subty_basic_salary
+        AND subty = '1000'
         AND begda <= @iv_key_date
         AND endda >= @iv_key_date.
 
@@ -311,15 +288,13 @@ CLASS zcl_ess_employee_provider_hcm IMPLEMENTATION.
 * Infotype 0101 ("Disciplinary") is referenced in the original
 * architecture notes as this system's suspension source, but it is not
 * a universal standard SAP infotype - its presence/structure is
-* system-specific. If table PA0101 does not exist on your system,
-* this method will fail ACTIVATION with a clear "table not found"
-* error rather than at runtime - see BUGS_AND_ISSUES.md Issue #007 if
-* you hit that; the fix is either creating/aliasing PA0101, or telling
-* me what your system's actual suspension source is so this method can
-* be pointed at it. If your system has PA0101, this returns TRUE when
-* an active record exists at the key date - narrow the WHERE clause
-* with a SUBTY filter if suspension needs to be distinguished from
-* other record types there.
+* system-specific. If table PA0101 does not exist on your system, this
+* method will fail ACTIVATION with a clear "table not found" error -
+* see BUGS_AND_ISSUES.md Issue #007 if you hit that; tell me what your
+* system's actual suspension source is so this can be pointed at it.
+* If your system has PA0101, this returns TRUE when an active record
+* exists at the key date - narrow the WHERE clause with a SUBTY filter
+* if suspension needs to be distinguished from other record types.
     DATA lv_dummy TYPE pernr_d.
 
     SELECT SINGLE pernr FROM pa0101

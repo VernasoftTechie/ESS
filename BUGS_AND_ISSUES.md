@@ -584,7 +584,7 @@ template.
 - **Date Found:** 2026-08-31
 - **Component:** `ZCL_ESS_EMPLOYEE_PROVIDER_HCM`
 - **Severity:** Medium (blocked 1 of 13 objects; the other 12 imported successfully after Issue #006's fix)
-- **Status:** Best-effort mitigation applied, **root cause not confirmed**
+- **Status:** First mitigation **ruled out** (recurred identically after removing TRY/CATCH); second mitigation applied, **root cause still not confirmed**
 
 ### Description
 After fixing Issue #006, re-pulling imported all 6 interfaces and 6 of
@@ -624,35 +624,68 @@ compile error is strictly easier to act on than either the vague
 scanning error we just hit or a silent runtime fallback that could
 mask a real config problem.
 
-### If This Doesn't Fix It
-If `ZCL_ESS_EMPLOYEE_PROVIDER_HCM` still fails to import after this
-change, the TRY/CATCH hypothesis is wrong and something else in this
-specific file is the cause — at that point the next diagnostic step is
-comparing this file line-by-line against a class that DID import
-successfully (e.g. `ZCL_ESS_WORKFLOW_ENGINE`), since it's the only
-concrete signal available (no other class shares the failure).
+### Update — First Mitigation Failed, Ruled Out
+Re-pulling after removing TRY/CATCH produced **the exact same error**:
+```
+CLAS, error while scanning source. Subrc = 0
+Import of object ZCL_ESS_EMPLOYEE_PROVIDER_HCM failed
+```
+This **rules out** TRY/CATCH and dynamic SQL as the cause — the file
+no longer contains either, and the error is unchanged.
+
+**Second, more systematic pass:** diffed this file's *class definition
+part* specifically (not implementation) against all 6 classes that
+imported successfully. Two remaining differences stood out, both
+unique to this one file:
+1. A `CONSTANTS:` chain declaration (3 subtype codes) in the
+   `PRIVATE SECTION` — **no other class in the Service Layer declares
+   any `CONSTANTS` at all.**
+2. Two private methods (`read_pa0000`, `read_pa0001`) using
+   `EXPORTING`-only signatures with no `RETURNING` — **every other
+   method in all 13 objects uses `RETURNING`.**
+
+Both were removed in the same pass (rather than testing one at a time
+again, having already burned one single-factor guess):
+- The 3 subtype literals (`'1000'`, `'0010'`, `'0020'`) are now inlined
+  directly into their respective `SELECT ... WHERE subty = '...'`
+  clauses instead of named constants.
+- `read_pa0000`/`read_pa0001` now `RETURNING` a small local result
+  structure each (`ty_pa0000_result`, `ty_pa0001_result`, declared via
+  `TYPES: BEGIN OF ... END OF` — a chain construct already proven safe,
+  since interfaces like `ZIF_ESS_EMPLOYEE_PROVIDER` use it successfully)
+  instead of populating `EXPORTING` parameters.
+
+### If This Still Doesn't Fix It
+If the exact same error recurs a third time, both of these hypotheses
+are wrong too, and the cause is something not yet identified — at that
+point the most useful next step is pulling a byte-for-byte diff of this
+file against `ZCL_ESS_WORKFLOW_ENGINE` (or trying to isolate by
+temporarily gutting this class down to a near-empty shell and adding
+sections back one at a time on your system, if you're willing, since
+that would pinpoint the exact trigger directly rather than guessing
+from this end).
 
 ### Test Case / Reproduction
 1. Pull the repo in ABAPGit, Import.
-2. If `ZCL_ESS_EMPLOYEE_PROVIDER_HCM` now imports successfully: root
-   cause was very likely the TRY/CATCH + dynamic SQL, confirmed
-   retroactively (update this entry's Status to "Resolved, confirmed"
-   if so).
-3. If PA0101 doesn't exist on your system, expect an activation error
-   naming that table specifically — report it and I'll either point
-   `is_suspended()` at your system's actual suspension source, or
-   reintroduce a safer non-TRY/CATCH way to make the read optional
-   (e.g. a config flag in `ZHR_ESS_CLIENT` gating whether the
-   suspension check runs at all, decided together rather than guessed).
+2. If `ZCL_ESS_EMPLOYEE_PROVIDER_HCM` now imports successfully: one of
+   `CONSTANTS:` or `EXPORTING`-only methods was the cause (still not
+   which one specifically, since both were removed together) — update
+   this entry's Status to "Resolved" if so.
+3. If PA0101 doesn't exist on your system, expect a *different*,
+   ordinary activation error naming that table — that would actually
+   be good news (confirms the scanning-level issue is gone) and is
+   separately actionable per the note in `is_suspended()`.
 
 ### Lesson Learned
 Not every abapGit import failure is a naming/metadata problem like
-Issues #001-#006 — this one is a different failure *class* entirely
-(source-level parsing, not catalog registration), and for this kind,
-the fastest path when there's exactly one differing file among several
-working ones is to look at what's *structurally unique* in that file
-and simplify it out first, rather than guessing at XML-level causes
-again.
+Issues #001-#006 — this is a different failure *class* entirely
+(source-level parsing, not catalog registration). The first
+single-factor guess (TRY/CATCH) was wrong; a more disciplined
+line-by-line diff against working files surfaced two other candidates,
+and both got removed together this time rather than repeating another
+slow one-at-a-time guess cycle. If this attempt is also wrong, the next
+step should be an actual bisection (strip the file down, rebuild
+piece-by-piece) rather than a third open-ended guess.
 
 ---
 
