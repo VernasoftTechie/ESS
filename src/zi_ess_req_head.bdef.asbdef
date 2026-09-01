@@ -42,7 +42,6 @@ persistent table zhr_ess_req_item
 lock dependent by _Header
 authorization dependent by _Header
 {
-  create;
   update;
   delete;
 
@@ -68,7 +67,6 @@ persistent table zhr_ess_custval
 lock dependent by _Header
 authorization dependent by _Header
 {
-  create;
   update;
   delete;
 

@@ -875,6 +875,83 @@ would have caught it, and did.
 
 ---
 
+## Issue #010: "create" declared both standalone and via parent association
+
+- **Date Found:** 2026-08-31
+- **Component:** `ZI_ESS_REQ_HEAD.bdef.asbdef`, `ZC_ESS_REQ_HEAD.bdef.asbdef`
+- **Severity:** Critical (6 activation errors, blocked both behavior definitions)
+- **Status:** ✅ Resolved
+
+### Description
+First activation of Stage 3 Round A produced 6 errors on
+`ZI_ESS_REQ_HEAD`/`ZC_ESS_REQ_HEAD`, all the same root cause in two
+different symptoms:
+```
+"create" is not allowed in entity "ZI_ESS_REQ_ITEM". Instead, the
+activation or deactivation takes place in entity "ZI_ESS_REQ_HEAD"
+using association "_Items".
+
+"create" is not allowed in entity "ZI_ESS_CUSTVAL". Instead, ...
+using association "_CustomValues".
+
+The base entity "ZI_ESS_REQ_ITEM" of "ZC_ESS_REQ_ITEM" does not
+define the operation "create".
+
+The base entity "ZI_ESS_CUSTVAL" of "ZC_ESS_CUSTVAL" does not
+define the operation "create".
+```
+Plus one non-blocking warning, cut off in the screenshot: `Field
+"LOANTYPE" is part of entity "ZI_ESS_REQ_HEAD", but not of table...`
+— **not yet resolved, full text needed if it recurs** (didn't block
+activation, so lower priority than the 6 errors).
+
+### Root Cause
+`ZI_ESS_REQ_ITEM` and `ZI_ESS_CUSTVAL` each declared **both**:
+1. A standalone `create;` in their own `define behavior for ...` block, **and**
+2. Deep-create permission via the root's `association _Items { create; }` / `association _CustomValues { create; }`
+
+RAP requires exactly **one** creation path per entity — either
+standalone (creatable via its own entity set, independent of any
+parent) or association-based deep-create (creatable only as part of a
+parent operation), never both. `ZI_ESS_LOANDTL` used *only* the
+association path (no standalone `create;`) and was **not** flagged —
+that's what confirmed the fix, rather than guessing at ABAP
+documentation.
+
+### Resolution
+Removed the standalone `create;` from both `ZI_ESS_REQ_ITEM` and
+`ZI_ESS_CUSTVAL` in `zi_ess_req_head.bdef.asbdef` (kept `update;
+delete;`), and the matching `use create;` from `ZC_ESS_REQ_ITEM` /
+`ZC_ESS_CUSTVAL` in `zc_ess_req_head.bdef.asbdef` (kept `use update;
+use delete;`). Creation of items and custom field values now happens
+**only** via the root's association-based deep-create — i.e., they're
+added as part of creating/updating the loan request itself (e.g. an
+inline-editable table facet on the Object Page), not through a
+separate top-level entity-set POST. This matches the pattern already
+proven working for every child in the reference repo (none of its
+children declare standalone `create;` either — all rely solely on
+their parent's association-level permission).
+
+### Test Case / Reproduction
+1. Pull the repo in ABAPGit, Activate.
+2. Expect `ZI_ESS_REQ_HEAD` and `ZC_ESS_REQ_HEAD` to activate with no
+   errors this time.
+3. If the "LOANTYPE... not of table" warning is still showing, share
+   its full (untruncated) text — need to see what comes after "but
+   not of table" to diagnose it; it may be benign (e.g. a note about
+   `field (mandatory)` on a nullable DB column) or may need a small
+   fix once fully visible.
+
+### Lesson Learned
+When one child among several siblings using the *same* pattern isn't
+flagged while others are, that's the fastest signal available — diff
+against the one that worked rather than reasoning from RAP
+documentation abstractly. This is the same diagnostic approach that
+worked for Issue #007 (comparing the one failing class against 6
+working ones).
+
+---
+
 ## Known Issues & Resolutions (Phase 1)
 
 ### 1. Email Source Fallback

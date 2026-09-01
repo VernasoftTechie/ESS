@@ -22,7 +22,6 @@ define behavior for ZC_ESS_LOANDTL alias LoanDetail
 
 define behavior for ZC_ESS_REQ_ITEM alias RequestItem
 {
-  use create;
   use update;
   use delete;
 
@@ -36,7 +35,6 @@ define behavior for ZC_ESS_APPRSTEP alias ApprovalStep
 
 define behavior for ZC_ESS_CUSTVAL alias CustomFieldValue
 {
-  use create;
   use update;
   use delete;
 
