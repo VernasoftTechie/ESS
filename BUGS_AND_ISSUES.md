@@ -10,7 +10,8 @@
 
 - ✅ **Stage 1 — DDIC:** 5 domains, 5 data elements, 13 tables (156 fields) — activated, confirmed live. Issues #001–#004.
 - ✅ **Stage 2 — Service Layer:** 6 interfaces, 7 classes — activated, confirmed live. Issues #005–#008.
-- 🔄 **Stage 3 — RAP Business Object:** Round A pushed (5 CDS interface views, 5 projection views, 2 behavior definitions, empty behavior class — CRUD + associations only). Not yet activated. Round B (actions/determinations/validations) follows once confirmed. Issue #009.
+- ✅ **Stage 3 Round A — RAP Business Object (entities):** 5 CDS interface views, 5 projection views, 2 behavior definitions, empty behavior class — CRUD + associations only. Activated, confirmed live. Issues #009–#010.
+- 🔄 **Stage 3 Round B — RAP Business Object (business logic):** not started. Adds `submit`/`withdraw` actions, `resolveEmployeeData`/`calcEmiSchedule` determinations, `validateEligibility` validation, and real handler-method logic in `ZBP_I_ESS_REQ_HEAD` calling the already-activated Service Layer.
 - ⏭️ **Stage 4 — Fiori UI:** not started.
 
 ---
