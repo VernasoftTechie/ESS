@@ -16,6 +16,7 @@
     <SCRTEXT_M>Request status</SCRTEXT_M>
     <SCRTEXT_L>Loan request status</SCRTEXT_L>
     <DTELMASTER>E</DTELMASTER>
+    <REFKIND>D</REFKIND>
    </DD04V>
   </asx:values>
  </asx:abap>

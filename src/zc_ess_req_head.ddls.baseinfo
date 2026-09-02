@@ -4,14 +4,14 @@
       "ZI_ESS_REQ_HEAD"
     ],
     "ASSOCIATED": [
-      "ZC_ESS_LOANDTL",
-      "ZI_ESS_LOANDTL",
-      "ZC_ESS_REQ_ITEM",
-      "ZI_ESS_REQ_ITEM",
       "ZC_ESS_APPRSTEP",
-      "ZI_ESS_APPRSTEP",
       "ZC_ESS_CUSTVAL",
-      "ZI_ESS_CUSTVAL"
+      "ZC_ESS_LOANDTL",
+      "ZC_ESS_REQ_ITEM",
+      "ZI_ESS_APPRSTEP",
+      "ZI_ESS_CUSTVAL",
+      "ZI_ESS_LOANDTL",
+      "ZI_ESS_REQ_ITEM"
     ],
     "BASE": [
       "ZI_ESS_REQ_HEAD"

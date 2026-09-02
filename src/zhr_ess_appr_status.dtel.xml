@@ -16,6 +16,7 @@
     <SCRTEXT_M>Approval status</SCRTEXT_M>
     <SCRTEXT_L>Approval step status</SCRTEXT_L>
     <DTELMASTER>E</DTELMASTER>
+    <REFKIND>D</REFKIND>
    </DD04V>
   </asx:values>
  </asx:abap>

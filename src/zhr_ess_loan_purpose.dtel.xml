@@ -16,6 +16,7 @@
     <SCRTEXT_M>Loan purpose</SCRTEXT_M>
     <SCRTEXT_L>Loan purpose</SCRTEXT_L>
     <DTELMASTER>E</DTELMASTER>
+    <REFKIND>D</REFKIND>
    </DD04V>
   </asx:values>
  </asx:abap>

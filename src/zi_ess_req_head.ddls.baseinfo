@@ -4,10 +4,10 @@
       "ZHR_ESS_REQ_HEAD"
     ],
     "ASSOCIATED": [
-      "ZI_ESS_LOANDTL",
-      "ZI_ESS_REQ_ITEM",
       "ZI_ESS_APPRSTEP",
-      "ZI_ESS_CUSTVAL"
+      "ZI_ESS_CUSTVAL",
+      "ZI_ESS_LOANDTL",
+      "ZI_ESS_REQ_ITEM"
     ]
   }
 }
