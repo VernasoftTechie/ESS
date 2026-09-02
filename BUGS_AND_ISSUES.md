@@ -11,7 +11,7 @@
 - ✅ **Stage 1 — DDIC:** 5 domains, 5 data elements, 13 tables (156 fields) — activated, confirmed live. Issues #001–#004.
 - ✅ **Stage 2 — Service Layer:** 6 interfaces, 7 classes — activated, confirmed live. Issues #005–#008.
 - ✅ **Stage 3 Round A — RAP Business Object (entities):** 5 CDS interface views, 5 projection views, 2 behavior definitions, empty behavior class — CRUD + associations only. Activated, confirmed live. Issues #009–#010.
-- 🔄 **Stage 3 Round B — RAP Business Object (business logic):** pushed, **not yet activated, completely unverified** (zero matching examples this session — see Issue #011). `submit`/`withdraw` actions, `resolveEmployeeData`/`calcEmiSchedule` determinations, `validateEligibility` validation, real handler-method logic in `ZBP_I_ESS_REQ_HEAD` calling the Service Layer.
+- ✅ **Stage 3 Round B — RAP Business Object (business logic):** activated and confirmed live. `submit`/`withdraw` actions, `resolveEmployeeData`/`calcEmiSchedule` determinations, `validateEligibility` validation, `get_global_authorizations`, all calling the Service Layer from `ZBP_I_ESS_REQ_HEAD`. Took 5 real activation rounds (Issues #011–#014) to find the correct `FOR BEHAVIOR OF` class syntax + `CATEGORY`/`CLSDEFINT` catalog fields + single-file Local Types shape — none of it verified in advance, all confirmed by real system feedback.
 - ⏭️ **Stage 4 — Fiori UI:** not started.
 
 ---
@@ -1256,6 +1256,83 @@ it to `ZHR_ESS_V1` specifically, far less likely to collide with
 anything from unrelated prior work). Updated in both
 `zbp_i_ess_req_head.clas.locals_def.abap` and
 `zbp_i_ess_req_head.clas.locals_imp.abap`.
+
+---
+
+## Issue #013/#014 — Final Resolution: Confirmed Root Cause and Real Working Structure
+
+- **Date Resolved:** 2026-08-31
+- **Status:** ✅ **Resolved and confirmed activated**
+
+### What Actually Fixed It
+None of the renames (#014's `lhc_LoanRequest` → `lhc_ess_loanrequest`
+→ `lhc_zess_v1_loanreq`) were ever the real problem. The naming
+collision theory was wrong, and so was the theory that this project's
+own prior failed pushes had polluted the namespace. The **actual**
+fix, found by creating the object natively via ADT's own "Behavior
+Implementation" wizard (reading `zi_ess_req_head.bdef.asbdef`
+directly) and pulling the result back down through abapGit for
+inspection:
+
+**1. The global class needs special one-line RAP syntax**, not a
+plain class with `CREATE PUBLIC`:
+```abap
+CLASS zbp_i_ess_req_head DEFINITION PUBLIC ABSTRACT FINAL FOR BEHAVIOR OF zi_ess_req_head.
+ENDCLASS.
+
+CLASS zbp_i_ess_req_head IMPLEMENTATION.
+ENDCLASS.
+```
+The `FOR BEHAVIOR OF <entity>` clause is what actually registers this
+class as a genuine RAP behavior implementation — nothing else does.
+Every earlier attempt (`CREATE PUBLIC` with or without `INHERITING
+FROM cl_abap_behavior_handler` on the *global* class) was structurally
+never going to work, regardless of what the local class inside it was
+named.
+
+**2. `VSEOCLASS` needs two fields this project never had**:
+```xml
+<CATEGORY>06</CATEGORY>
+<CLSDEFINT>ZI_ESS_REQ_HEAD</CLSDEFINT>
+```
+`CATEGORY=06` marks the class as a Behavior Implementation type in the
+object catalog (not an ordinary class); `CLSDEFINT` links it to the
+CDS entity it implements behavior for. Without both, the system never
+recognized the class as behavior-hosting — which is *why* every local
+class pasted inside it, regardless of name, got the generic "you may
+not define the global class X" rejection. The check was never really
+about a naming collision at all.
+
+**3. The Local Types content is ONE file, not two.** abapGit exports
+the entire Local Types section — both `CLASS ... DEFINITION` and
+`CLASS ... IMPLEMENTATION` — combined into a single
+`<name>.clas.locals_imp.abap`. There is no separate
+`.clas.locals_def.abap` for this object type/system configuration;
+Issue #013's split-file approach was based on a plausible-sounding but
+incorrect general assumption, never verified against a real working
+example (as flagged explicitly at the time). The orphaned
+`zbp_i_ess_req_head.clas.locals_def.abap` has been deleted.
+
+**4. `authorization master ( global )` requires a handler method too**
+— `get_global_authorizations FOR GLOBAL AUTHORIZATION`, which the
+wizard auto-generated and which now has a permissive first-pass
+implementation (grants create/update/delete/submit/withdraw
+unconditionally — see the method's own comment for the caveat).
+
+### Confirmed Local Class Details
+`lhc_LoanRequest` — the **very first name tried** — was correct all
+along. So was `INHERITING FROM cl_abap_behavior_handler` on that local
+class. Neither needed to change; only the *outer* global class shell
+was ever actually broken.
+
+### Workflow Note for Future RAP Behavior Classes
+This object was fixed by creating it **natively in ADT** (via New →
+Behavior Implementation, reading the BDEF), then **pushing it up**
+through abapGit rather than continuing to push a from-scratch version
+down. That pull-back is now the verified reference for this file
+shape — any *new* RAP behavior implementation class in this project
+(Stage 4 onward) should reuse this exact structure rather than
+re-deriving it from general knowledge again.
 
 ---
 
