@@ -1232,6 +1232,33 @@ the actual gap, not anything about the ABAP itself.
 
 ---
 
+## Issue #014 Update: Collision traced to a prior, unrelated project
+
+- **Date:** 2026-08-31
+- **Status:** Renamed again, awaiting confirmation
+
+Renaming `lhc_LoanRequest` → `lhc_ess_loanrequest` (first attempt at
+Issue #014) hit the **identical** "you may not define the global class
+X" error, just with the new name substituted in — proving the error
+wasn't about either specific name, and ruling out "leftover from this
+project's failed abapGit merge" as the source.
+
+Root cause, per the user: an **earlier, unrelated project built long
+ago in the same SAP system reused these same class names**. Generic
+RAP handler names like `LHC_LOANREQUEST` are exactly the kind of name
+a prior loan/request-style application would also have picked — a
+coincidental collision with old, unrelated work, not a bug in this
+project's setup at all.
+
+**Resolution:** renamed the local handler class again, this time to
+something distinctly project-scoped: **`lhc_zess_v1_loanreq`** (ties
+it to `ZHR_ESS_V1` specifically, far less likely to collide with
+anything from unrelated prior work). Updated in both
+`zbp_i_ess_req_head.clas.locals_def.abap` and
+`zbp_i_ess_req_head.clas.locals_imp.abap`.
+
+---
+
 ## Known Issues & Resolutions (Phase 1)
 
 ### 1. Email Source Fallback

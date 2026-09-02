@@ -1,4 +1,4 @@
-CLASS lhc_ess_loanrequest IMPLEMENTATION.
+CLASS lhc_zess_v1_loanreq IMPLEMENTATION.
 
   METHOD resolveEmployeeData.
 

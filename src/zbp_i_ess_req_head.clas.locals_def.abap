@@ -1,4 +1,4 @@
-CLASS lhc_ess_loanrequest DEFINITION INHERITING FROM cl_abap_behavior_handler.
+CLASS lhc_zess_v1_loanreq DEFINITION INHERITING FROM cl_abap_behavior_handler.
 
   PRIVATE SECTION.
 
