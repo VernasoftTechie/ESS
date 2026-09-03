@@ -1,0 +1,8 @@
+@EndUserText.label: 'ESS Loan Request UI'
+define service ZSD_ESS_REQ_HEAD {
+  expose ZC_ESS_REQ_HEAD as LoanRequest;
+  expose ZC_ESS_LOANDTL as LoanDetail;
+  expose ZC_ESS_REQ_ITEM as RequestItem;
+  expose ZC_ESS_APPRSTEP as ApprovalStep;
+  expose ZC_ESS_CUSTVAL as CustomFieldValue;
+}
