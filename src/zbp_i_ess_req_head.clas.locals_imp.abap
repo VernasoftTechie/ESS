@@ -261,16 +261,20 @@ CLASS lhc_LoanRequest IMPLEMENTATION.
         CONTINUE.
       ENDIF.
 
+      DATA(lv_currency) = zcl_ess_utility=>get_currency_for_cc( ls_emp-company_code ).
+
       APPEND VALUE #( ClientId      = ls_request-ClientId
                        RequestId     = ls_request-RequestId
                        EmployeeName  = ls_emp-employee_name
                        EmployeeEmail = ls_emp-email
                        BasicSalary   = ls_emp-basic_salary
                        CompanyCode   = ls_emp-company_code
+                       Currency      = lv_currency
                        %control-EmployeeName  = if_abap_behv=>mk-on
                        %control-EmployeeEmail = if_abap_behv=>mk-on
                        %control-BasicSalary   = if_abap_behv=>mk-on
-                       %control-CompanyCode   = if_abap_behv=>mk-on )
+                       %control-CompanyCode   = if_abap_behv=>mk-on
+                       %control-Currency      = if_abap_behv=>mk-on )
         TO lt_update.
 
     ENDLOOP.
@@ -278,7 +282,7 @@ CLASS lhc_LoanRequest IMPLEMENTATION.
     IF lt_update IS NOT INITIAL.
       MODIFY ENTITIES OF zi_ess_req_head IN LOCAL MODE
         ENTITY LoanRequest
-          UPDATE FIELDS ( EmployeeName EmployeeEmail BasicSalary CompanyCode )
+          UPDATE FIELDS ( EmployeeName EmployeeEmail BasicSalary CompanyCode Currency )
           WITH lt_update.
     ENDIF.
 

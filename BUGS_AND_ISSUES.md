@@ -1388,6 +1388,62 @@ by default.
 
 ---
 
+## Issue #016: Editable Amount field can't pair with a read-only Currency field
+
+- **Date Found:** 2026-09-03
+- **Component:** `zi_ess_req_head.bdef.asbdef`, `ZBP_I_ESS_REQ_HEAD` (`resolveEmployeeData`)
+- **Severity:** Critical (blocked Service Binding creation)
+- **Status:** ✅ Resolved
+
+### Description
+Creating the Service Binding (`ZSB_ESS_REQ_HEAD`, OData V4 - UI) over
+`ZSD_ESS_REQ_HEAD` failed with:
+```
+A static read-only field 'CURRENCY' is not allowed for an editable
+amount field
+```
+
+### Root Cause
+`Amount` on `ZI_ESS_REQ_HEAD` is editable (`field ( mandatory )
+LoanType, Amount, TenureMonths`), and the projection annotates it
+`@Semantics.amount.currencyCode: 'Currency'`. Fiori Elements requires
+an amount field's paired currency-unit field to be **at least as
+editable** as the amount itself — you can't let someone type a number
+while the currency it's denominated in is permanently locked. `Currency`
+was listed in `field ( readonly )`, creating exactly that conflict.
+
+### Resolution
+1. Removed `Currency` from the `field ( readonly )` list in
+   `zi_ess_req_head.bdef.asbdef` — it's now a normal, technically
+   editable field.
+2. To keep the actual user experience the same (nobody should need to
+   manually pick a currency), extended `resolveEmployeeData` to also
+   derive `Currency` via `ZCL_ESS_UTILITY=>get_currency_for_cc()` from
+   the employee's resolved `CompanyCode`, right alongside the other
+   fields it already fills in on create. The field is editable at the
+   framework level, but auto-populated in practice — same pattern as
+   `EmployeeName`/`BasicSalary`/`CompanyCode`.
+
+### Test Case / Reproduction
+1. Pull the repo in ABAPGit, Activate.
+2. Retry creating the Service Binding — expect this specific error
+   gone.
+3. Functionally: create a request with a resolvable `EmployeePernr` and
+   confirm `Currency` gets filled in automatically (matching the
+   company code's currency from table `T001`) without the user typing
+   it.
+
+### Lesson Learned
+A field's `field ( readonly )` status isn't just about who can see vs.
+edit it — for **amount/currency-unit pairs specifically**, Fiori
+Elements enforces a consistency rule between the two paired fields
+that has nothing to do with either field's own business meaning in
+isolation. When designing field control for a `@Semantics.amount`/
+`@Semantics.currencyCode` pair, check both fields' editability
+together, not one at a time.
+
+---
+
 ## Known Issues & Resolutions (Phase 1)
 
 ### 1. Email Source Fallback
