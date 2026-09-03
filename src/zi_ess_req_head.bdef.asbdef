@@ -16,14 +16,6 @@ etag master ChangedOn
                       RequestDate, RequestTime, SubmitDate, SubmitTime,
                       BasicSalary, CompanyCode, CreatedOn, CreatedBy, ChangedOn, ChangedBy;
 
-* Currency is intentionally NOT read-only: an editable Amount field
-* requires its paired currency-unit field (Currency) to be at least as
-* editable, per Fiori Elements' amount-field rule ("A static read-only
-* field 'CURRENCY' is not allowed for an editable amount field" - see
-* BUGS_AND_ISSUES.md Issue #016). It's still auto-derived from the
-* employee's company code by resolveEmployeeData, same as before -
-* users won't normally need to touch it, they just technically can.
-
   field ( mandatory ) LoanType, Amount, TenureMonths;
 
   determination resolveEmployeeData on modify { create; }

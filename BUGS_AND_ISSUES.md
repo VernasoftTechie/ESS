@@ -1444,6 +1444,59 @@ together, not one at a time.
 
 ---
 
+## Issue #017: BDEF source doesn't support classic ABAP `*` comments
+
+- **Date Found:** 2026-09-03
+- **Component:** `zi_ess_req_head.bdef.asbdef`
+- **Severity:** Critical (blocked activation)
+- **Status:** ✅ Resolved
+
+### Description
+Issue #016's fix included a `*`-prefixed explanatory comment block
+inside the BDEF source. Activation failed with 7 parse errors:
+```
+The text literal is not closed.
+Unexpected character '''.
+Unexpected character '-'.
+Unexpected character '#'.
+```
+
+### Root Cause
+BDEF (behavior definition) source is not classic ABAP — it's a
+structured DDL-like grammar (same family as CDS DDL), and it does not
+recognize `*` at the start of a line as a full-line comment the way
+regular ABAP source does. The parser tried to interpret the comment
+text as actual BDEF statements, choking on the apostrophes (from
+"won't", "Elements'"), the hyphen, and the hash mark inside the prose.
+
+### Resolution
+Removed the comment block entirely — it was pure documentation, not
+functional. The actual fix from Issue #016 (removing `Currency` from
+the `field ( readonly )` list) is untouched and intact. The
+explanation lives here and in the commit history instead of inline in
+the `.asbdef` file.
+
+Checked every other `.asbdef` file in the repo for the same pattern —
+none of the others had `*`-style comments, so this was isolated to the
+one file just edited.
+
+### Test Case / Reproduction
+1. Pull the repo in ABAPGit, Activate `ZI_ESS_REQ_HEAD`.
+2. Expect these 7 parse errors gone; Currency should still show as
+   editable per Issue #016.
+
+### Lesson Learned
+Not every "structured source" file type in this project shares ABAP's
+own comment syntax — CDS DDL and BDEF are close cousins of classic
+ABAP but not identical, and assuming `*`-comments work everywhere
+`.abap`-adjacent extensions appear is exactly the kind of small,
+easy-to-avoid mistake this log exists to catch. If documentation needs
+to live near BDEF source in the future, verify the actual comment
+syntax first (or just don't comment inline — put it in the bug log
+instead, as done here).
+
+---
+
 ## Known Issues & Resolutions (Phase 1)
 
 ### 1. Email Source Fallback
